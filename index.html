@@ -30,7 +30,10 @@ async function register(){const nickname=$('regNick').value.trim(),password=$('r
 async function loadPosts(){const {data,error}=await sb.from('guides').select('*').order('created_at',{ascending:false});if(error){$('postList').innerHTML=`<div class="card"><div class="small">공략 불러오기 오류: ${esc(error.message)}</div></div>`;return}const {data:memberRows}=await sb.from('members').select('id,nickname');const nicknameById=Object.fromEntries((memberRows||[]).map(m=>[String(m.id),m.nickname]));posts=(data||[]).map(p=>({...p,author_nickname:nicknameById[String(p.author_id)]||'알 수 없음'}));renderPosts()}
 function setCategory(c,el){category=c;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderPosts()}
 function normalizeGuideTitle(title){
- return String(title||'').toLocaleLowerCase('ko-KR').replace(/[，,\s]+/g,'').trim();
+ return String(title||'')
+   .toLocaleLowerCase('ko-KR')
+   .normalize('NFKC')
+   .replace(/[\s\p{P}\p{S}]+/gu,'');
 }
 const expandedGuideGroups=new Set();
 function toggleGuideGroup(key){
