@@ -39,7 +39,7 @@ hr{border:0;border-top:1px solid #333;margin:18px 0}
       <button class="btn secondary" onclick="showRegister()">처음 오셨나요? 가입 신청</button>
       <div id="loginMsg" class="small" style="margin-top:10px;color:#ff8f80"></div>
     </div>
-    <div class="notice">첫 번째 버전은 브라우저 저장 방식입니다. 아래 관리자 버튼으로 관리자 기능을 시험할 수 있습니다.</div>
+    <div class="notice">관리자 비밀번호는 화면이나 소스코드에 저장하지 않습니다.</div>
     <div style="height:10px"></div>
     <button class="btn gold" onclick="adminLogin()">🔐 관리자 페이지</button>
   </section>
@@ -107,8 +107,7 @@ function login(){
  session=m; category='전체'; show('appView'); render();
 }
 function adminLogin(){
- const p=prompt('관리자 암호를 입력하세요. (첫 실행: admin1234)');
- if(p==='admin1234'){session={nick:'관리자',admin:true};show('adminView');renderAdmin()} else alert('관리자 암호가 틀렸습니다.')
+ alert('이 구버전 관리자 로그인은 비활성화되었습니다. Supabase 관리자 계정으로 로그인하세요.')
 }
 function logout(){session=null;goLogin()}
 function goLogin(){show('loginView')}
