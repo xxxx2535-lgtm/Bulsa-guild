@@ -54,6 +54,24 @@
 .hof-season{border:1px solid #75420d;background:linear-gradient(145deg,#2b1908,#111);border-radius:15px;padding:14px;margin:10px 0}
 .hof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}
 .hof-cell{text-align:center;background:#171717;border:1px solid #4a3520;border-radius:11px;padding:9px 4px;font-size:12px}
+
+/* v20: comment count + personal comment notification bell */
+.notify-bell{
+  position:absolute!important;left:18px!important;top:50%!important;transform:translateY(-50%)!important;
+  z-index:5!important;width:48px!important;height:48px!important;border-radius:50%!important;
+  border:1px solid rgba(255,255,255,.35)!important;background:rgba(15,15,15,.88)!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  font-size:25px!important;cursor:pointer!important;box-shadow:0 3px 12px #0008!important;
+}
+.notify-bell.has-unread{border-color:#ffd34d!important;box-shadow:0 0 10px #ffbf00,0 0 20px #ff8a00!important;animation:bellGlow 1.25s infinite alternate}
+.notify-bell.has-unread .bell-icon{filter:sepia(1) saturate(7) hue-rotate(355deg) brightness(1.35)}
+.notify-count{position:absolute;right:-5px;top:-6px;min-width:21px;height:21px;padding:0 5px;border-radius:999px;background:#f11;color:white;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;border:2px solid #250300}
+@keyframes bellGlow{from{transform:translateY(-50%) scale(1)}to{transform:translateY(-50%) scale(1.06)}}
+.notification-item{width:100%;text-align:left;background:#151515;border:1px solid #3b3b3b;border-radius:13px;padding:12px;margin:8px 0;color:#fff}
+.notification-item.unread{border-color:#d89a19;background:linear-gradient(135deg,#2a1b06,#151515)}
+.notification-title{font-weight:900;margin-bottom:5px}
+.notification-meta{font-size:12px;color:#aaa}
+@media(max-width:430px){.notify-bell{left:10px!important;width:42px!important;height:42px!important;font-size:22px!important}}
 </style>
 <link rel="icon" type="image/png" sizes="512x512" href="./icon.png?v=2">
 <link rel="apple-touch-icon" sizes="512x512" href="./icon.png?v=2">
@@ -63,6 +81,7 @@
   <div class="logo-block">
     <img src="./bulsa-banner.png?v=2" alt="불사 길드 배너">
   </div>
+  <button id="notifyBell" class="notify-bell" onclick="openNotifications()" aria-label="댓글 알림"><span class="bell-icon">🔔</span><span id="notifyCount" class="notify-count hidden">0</span></button>
   <div class="header-actions">
     <button class="iconbtn" onclick="openMyPage()">마이페이지</button>
     <button class="iconbtn" onclick="logout()">로그아웃</button>
@@ -83,16 +102,16 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
     storage:window.localStorage
   }
 });
-let member=null,posts=[],category='홈',battleMembers=[],battleRecords=[],activeSeason=null,noticeRow=null,hallOfFame=[];
+let member=null,posts=[],category='홈',battleMembers=[],battleRecords=[],activeSeason=null,noticeRow=null,hallOfFame=[],commentCounts={},myNotifications=[];
 const $=id=>document.getElementById(id); const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 function show(id){['loginView','appView','adminView'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden')}
 function nickEmail(n){return encodeURIComponent(n.trim().toLowerCase())+'@bulsa-guild.local'}
 async function login(){ $('loginMsg').textContent='로그인 중...'; const nickname=$('loginEmail').value.trim(),password=$('loginPass').value; if(!nickname||!password){$('loginMsg').textContent='닉네임과 비밀번호를 입력해주세요.';return} const email=nickEmail(nickname); const {data,error}=await sb.auth.signInWithPassword({email,password}); if(error){$('loginMsg').textContent='로그인 실패: 닉네임 또는 비밀번호를 확인해주세요.';return} await enterWithUser(data.user); }
-async function enterWithUser(user){ const {data:m,error}=await sb.from('members').select('*').eq('id',user.id).maybeSingle(); if(error){$('loginMsg').textContent='회원정보 확인 오류: '+error.message;return} if(!m){await sb.auth.signOut();$('loginMsg').textContent='가입 신청 정보가 없습니다.';return} if(!m.approved){await sb.auth.signOut();$('loginMsg').textContent='아직 관리자 승인을 기다리는 중입니다.';return} member=m; $('who').textContent=(m.nickname||user.email)+'님 환영합니다.'; show('appView'); $('writeArea').classList.remove('hidden'); $('adminButton').classList.toggle('hidden',!m.is_admin); $('adminBtn').classList.toggle('hidden',!m.is_admin); await loadPosts(); await loadBattleData(); }
+async function enterWithUser(user){ const {data:m,error}=await sb.from('members').select('*').eq('id',user.id).maybeSingle(); if(error){$('loginMsg').textContent='회원정보 확인 오류: '+error.message;return} if(!m){await sb.auth.signOut();$('loginMsg').textContent='가입 신청 정보가 없습니다.';return} if(!m.approved){await sb.auth.signOut();$('loginMsg').textContent='아직 관리자 승인을 기다리는 중입니다.';return} member=m; $('who').textContent=(m.nickname||user.email)+'님 환영합니다.'; show('appView'); $('writeArea').classList.remove('hidden'); $('adminButton').classList.toggle('hidden',!m.is_admin); $('adminBtn').classList.toggle('hidden',!m.is_admin); await loadPosts(); await loadBattleData(); await loadNotifications(); }
 async function logout(){await sb.auth.signOut();member=null;show('loginView')}
 function showRegister(){ $('modalBox').innerHTML=`<h2>가입 신청</h2><div class="small">닉네임과 비밀번호로 가입 신청하고 관리자 승인을 기다려주세요.</div><input id="regNick" placeholder="게임 닉네임"><input id="regPass" type="password" placeholder="비밀번호 (6자 이상)"><button class="btn" onclick="register()">가입 신청</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">닫기</button>`;$('modal').classList.remove('hidden')}
 async function register(){const nickname=$('regNick').value.trim(),password=$('regPass').value;if(!nickname||password.length<6)return alert('닉네임과 6자 이상 비밀번호를 입력해주세요.');if(nickname.length>30)return alert('닉네임은 30자 이하로 입력해주세요.');const email=nickEmail(nickname);const {data,error}=await sb.auth.signUp({email,password,options:{data:{nickname}}});if(error){if(String(error.message).toLowerCase().includes('already')||String(error.message).toLowerCase().includes('registered'))return alert('이미 사용 중인 닉네임입니다.');return alert('가입 실패: '+error.message)}closeModal();alert('가입 신청 완료! 관리자 승인을 기다려주세요.');await sb.auth.signOut()}
-async function loadPosts(){const {data,error}=await sb.from('guides').select('*').order('created_at',{ascending:false});if(error){$('postList').innerHTML=`<div class="card"><div class="small">공략 불러오기 오류: ${esc(error.message)}</div></div>`;return}const {data:memberRows}=await sb.from('members').select('id,nickname');const nicknameById=Object.fromEntries((memberRows||[]).map(m=>[String(m.id),m.nickname]));posts=(data||[]).map(p=>({...p,author_nickname:nicknameById[String(p.author_id)]||'알 수 없음'}));renderPosts()}
+async function loadPosts(){const [{data,error},{data:memberRows},{data:commentRows}]=await Promise.all([sb.from('guides').select('*').order('created_at',{ascending:false}),sb.from('members').select('id,nickname'),sb.from('guide_comments').select('guide_id')]);if(error){$('postList').innerHTML=`<div class="card"><div class="small">공략 불러오기 오류: ${esc(error.message)}</div></div>`;return}const nicknameById=Object.fromEntries((memberRows||[]).map(m=>[String(m.id),m.nickname]));commentCounts={};(commentRows||[]).forEach(c=>commentCounts[String(c.guide_id)]=(commentCounts[String(c.guide_id)]||0)+1);posts=(data||[]).map(p=>({...p,author_nickname:nicknameById[String(p.author_id)]||'알 수 없음'}));renderPosts()}
 function setCategory(c,el){category=c;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');if(c==='전적')loadBattleData();else renderPosts()}
 function normalizeGuideTitle(title){
  return String(title||'')
@@ -114,7 +133,7 @@ function statusInfo(status){
 function renderPostCard(p){
  const canEdit=member?.is_admin||String(p.author_id)===String(member?.id);
  const imgs=getImages(p),st=statusInfo(p.status);
- return `<div class="post"><span class="badge">${esc(p.category||p.cat||'공략')}</span><span class="status-badge ${st.cls}">${st.label}</span><div class="title">${esc(p.title)}</div><div class="post-author">✍️ 작성자 · ${esc(p.author_nickname||'알 수 없음')}</div><div class="small">${new Date(p.created_at||Date.now()).toLocaleDateString('ko-KR')}</div><div class="post-body">${esc(p.content??p.body??'')}</div>${imgs.length?`<div class="image-grid">${imgs.map(u=>`<img src="${esc(u)}" loading="lazy">`).join('')}</div>`:''}<div class="post-actions">${canEdit?`<button class="iconbtn" onclick='editById(${JSON.stringify(String(p.id))})'>수정</button><button class="iconbtn" onclick='deletePost(${JSON.stringify(String(p.id))})'>삭제</button>`:''}<button type="button" class="iconbtn" onclick='event.stopPropagation();openComments(${JSON.stringify(String(p.id))})'>💬 댓글</button><button type="button" class="iconbtn" onclick='event.stopPropagation();addSameTitleById(${JSON.stringify(String(p.id))})'>➕ 추가</button></div></div>`;
+ return `<div class="post"><span class="badge">${esc(p.category||p.cat||'공략')}</span><span class="status-badge ${st.cls}">${st.label}</span><div class="title">${esc(p.title)}</div><div class="post-author">✍️ 작성자 · ${esc(p.author_nickname||'알 수 없음')}</div><div class="small">${new Date(p.created_at||Date.now()).toLocaleDateString('ko-KR')}</div><div class="post-body">${esc(p.content??p.body??'')}</div>${imgs.length?`<div class="image-grid">${imgs.map(u=>`<img src="${esc(u)}" loading="lazy">`).join('')}</div>`:''}<div class="post-actions">${canEdit?`<button class="iconbtn" onclick='editById(${JSON.stringify(String(p.id))})'>수정</button><button class="iconbtn" onclick='deletePost(${JSON.stringify(String(p.id))})'>삭제</button>`:''}<button type="button" class="iconbtn" onclick='event.stopPropagation();openComments(${JSON.stringify(String(p.id))})'>💬 댓글 ${commentCounts[String(p.id)]||0}</button><button type="button" class="iconbtn" onclick='event.stopPropagation();addSameTitleById(${JSON.stringify(String(p.id))})'>➕ 추가</button></div></div>`;
 }
 function renderPosts(){
  if(category==='홈'){
@@ -274,9 +293,54 @@ async function savePost(id){
 
 
 
+
+async function loadNotifications(){
+ if(!member)return;
+ const myGuideIds=posts.filter(p=>String(p.author_id)===String(member.id)).map(p=>Number(p.id));
+ if(!myGuideIds.length){myNotifications=[];updateBell();return;}
+ const [{data:comments,error},{data:reads},{data:members}]=await Promise.all([
+   sb.from('guide_comments').select('*').in('guide_id',myGuideIds).neq('author_id',member.id).order('created_at',{ascending:false}),
+   sb.from('comment_notifications').select('*').eq('user_id',member.id),
+   sb.from('members').select('id,nickname')
+ ]);
+ if(error){console.warn('알림 불러오기 오류',error);return;}
+ const readMap=Object.fromEntries((reads||[]).map(r=>[String(r.comment_id),r]));
+ const names=Object.fromEntries((members||[]).map(m=>[String(m.id),m.nickname]));
+ myNotifications=(comments||[]).map(c=>{
+   const guide=posts.find(p=>String(p.id)===String(c.guide_id));
+   return {...c,guide_title:guide?.title||'공략',commenter:names[String(c.author_id)]||'길드원',read_at:readMap[String(c.id)]?.read_at||null};
+ });
+ updateBell();
+}
+function updateBell(){
+ const bell=$('notifyBell'),badge=$('notifyCount');if(!bell||!badge)return;
+ const unread=myNotifications.filter(n=>!n.read_at).length;
+ bell.classList.toggle('has-unread',unread>0);
+ badge.textContent=unread>99?'99+':String(unread);
+ badge.classList.toggle('hidden',unread===0);
+}
+async function openNotifications(){
+ await loadNotifications();
+ $('modalBox').innerHTML=`<h2>🔔 댓글 알림</h2><div class="small">내가 작성한 공략에 달린 댓글입니다.</div><div style="height:8px"></div>${myNotifications.map(n=>`<button class="notification-item ${n.read_at?'':'unread'}" onclick="openNotificationComment(${n.id},${n.guide_id})"><div class="notification-title">${n.read_at?'💬':'🟡'} 내 공략에 댓글이 달렸습니다.</div><div><b>${esc(n.guide_title)}</b></div><div class="notification-meta">${esc(n.commenter)} · ${new Date(n.created_at).toLocaleString('ko-KR')}</div></button>`).join('')||'<div class="card"><div class="small">아직 댓글 알림이 없습니다.</div></div>'}<button class="btn secondary" onclick="closeModal()">닫기</button>`;
+ $('modal').classList.remove('hidden');
+}
+async function openNotificationComment(commentId,guideId){
+ const now=new Date().toISOString();
+ const {error}=await sb.from('comment_notifications').upsert({user_id:member.id,comment_id:Number(commentId),read_at:now},{onConflict:'user_id,comment_id'});
+ if(error)return alert('알림 확인 처리 오류: '+error.message);
+ const n=myNotifications.find(x=>String(x.id)===String(commentId));if(n)n.read_at=now;updateBell();
+ await openComments(String(guideId));
+}
 async function openComments(guideId){
  const p=posts.find(x=>String(x.id)===String(guideId));if(!p)return;
  const [{data:cs,error},{data:ms}]=await Promise.all([sb.from('guide_comments').select('*').eq('guide_id',guideId).order('created_at',{ascending:true}),sb.from('members').select('id,nickname')]);
+ if(!error&&String(p.author_id)===String(member.id)){
+   const unread=(cs||[]).filter(c=>String(c.author_id)!==String(member.id));
+   if(unread.length){
+     await sb.from('comment_notifications').upsert(unread.map(c=>({user_id:member.id,comment_id:c.id,read_at:new Date().toISOString()})),{onConflict:'user_id,comment_id'});
+     await loadNotifications();
+   }
+ }
  if(error)return alert('댓글 불러오기 오류: '+error.message);
  const names=Object.fromEntries((ms||[]).map(m=>[String(m.id),m.nickname]));
  $('modalBox').innerHTML=`<h2>💬 댓글 · ${esc(p.title)}</h2><div id="commentList">${(cs||[]).map(c=>`<div class="comment"><div class="comment-head"><b>${esc(names[String(c.author_id)]||'알 수 없음')}</b><span>${new Date(c.created_at).toLocaleString('ko-KR')}</span></div><div>${esc(c.content)}</div>${(member?.is_admin||String(c.author_id)===String(member?.id))?`<button class="mini-btn" style="margin-top:7px" onclick="deleteComment(${c.id},'${guideId}')">삭제</button>`:''}</div>`).join('')||'<div class="small">아직 댓글이 없습니다.</div>'}</div><textarea id="commentText" style="min-height:90px" maxlength="500" placeholder="댓글을 입력하세요."></textarea><button class="btn" onclick="saveComment('${guideId}')">댓글 등록</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">닫기</button>`;
@@ -285,11 +349,11 @@ async function openComments(guideId){
 async function saveComment(guideId){
  const content=$('commentText').value.trim();if(!content)return alert('댓글 내용을 입력해주세요.');
  const {error}=await sb.from('guide_comments').insert({guide_id:Number(guideId),author_id:member.id,content});
- if(error)return alert('댓글 등록 오류: '+error.message);await openComments(guideId);
+ if(error)return alert('댓글 등록 오류: '+error.message);await loadPosts();await loadNotifications();await openComments(guideId);
 }
 async function deleteComment(id,guideId){
  if(!confirm('댓글을 삭제할까요?'))return;
- const {error}=await sb.from('guide_comments').delete().eq('id',id);if(error)return alert('댓글 삭제 오류: '+error.message);await openComments(guideId);
+ const {error}=await sb.from('guide_comments').delete().eq('id',id);if(error)return alert('댓글 삭제 오류: '+error.message);await loadPosts();await loadNotifications();await openComments(guideId);
 }
 
 function openMyPage(){
