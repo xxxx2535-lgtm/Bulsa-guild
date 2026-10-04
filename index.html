@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" sizes="512x512" href="./icon.png?v=2">
 </head><body><div class="wrap">
 <section id="loginView"><div class="logo">불사</div><div class="sub">🔥 불사 길드 전용 공략실</div><div class="card hero"><h2>길드원 전용 입장</h2><div class="small">가입한 닉네임과 비밀번호를 입력하세요.</div><input id="loginEmail" placeholder="닉네임"><input id="loginPass" type="password" placeholder="비밀번호"><button class="btn" onclick="login()">입장하기</button><div style="height:8px"></div><button class="btn secondary" onclick="showRegister()">처음 오셨나요? 가입 신청</button><div id="loginMsg" class="small" style="margin-top:10px;color:#ff8f80"></div></div><div class="notice">🔒 비밀번호는 이 화면이나 소스코드에 저장되지 않습니다.</div></section>
-<section id="appView" class="hidden"><div class="topbar"><div><b>🔥 불사 공략실<div style="font-size:11px;color:#c9a28f;margin-top:2px;opacity:.85">만든이 - 김다율도율아부지</div></b><div class="small" id="who"></div></div><button class="iconbtn" onclick="logout()">로그아웃</button></div><div class="searchbox"><span class="searchicon">🔎</span><input id="searchInput" placeholder="제목 검색 (단어 일부만 입력해도 됩니다)" oninput="renderPosts()"></div><div class="tabs"><button class="tab active" onclick="setCategory('홈',this)">🏠 홈</button><button class="tab" onclick="setCategory('전체',this)">전체</button><button class="tab" onclick="setCategory('길드전',this)">⚔️ 길드전</button><button class="tab" onclick="setCategory('전적',this)">📊 전적</button><button class="tab" onclick="setCategory('공성전',this)">🏰 공성전</button><button class="tab" onclick="setCategory('파괴신',this)">💀 파괴신</button></div><div class="card hero"><h2 id="welcome">불사 공략실</h2><div class="small">승인된 길드원은 누구나 공략을 작성할 수 있습니다.</div></div><div id="postList"></div><div id="writeArea"><button class="btn" onclick="openPostEditor()">✍️ 공략 작성</button><div id="adminBtn" class="hidden" style="height:8px"></div><button id="adminButton" class="btn gold hidden" onclick="openAdmin()">🔐 관리자 페이지</button></div><div class="footer">불사 길드</div></section>
+<section id="appView" class="hidden"><div class="topbar"><div><b>🔥 불사 공략실<div style="font-size:11px;color:#c9a28f;margin-top:2px;opacity:.85">만든이 - 김다율도율아부지</div></b><div class="small" id="who"></div></div><div class="row"><button class="iconbtn" onclick="openMyPage()">마이페이지</button><button class="iconbtn" onclick="logout()">로그아웃</button></div></div><div class="searchbox"><span class="searchicon">🔎</span><input id="searchInput" placeholder="제목 검색 (단어 일부만 입력해도 됩니다)" oninput="renderPosts()"></div><div class="tabs"><button class="tab active" onclick="setCategory('홈',this)">🏠 홈</button><button class="tab" onclick="setCategory('전체',this)">전체</button><button class="tab" onclick="setCategory('길드전',this)">⚔️ 길드전</button><button class="tab" onclick="setCategory('전적',this)">📊 전적</button><button class="tab" onclick="setCategory('공성전',this)">🏰 공성전</button><button class="tab" onclick="setCategory('파괴신',this)">💀 파괴신</button></div><div class="card hero"><h2 id="welcome">불사 공략실</h2><div class="small">승인된 길드원은 누구나 공략을 작성할 수 있습니다.</div></div><div id="postList"></div><div id="writeArea"><button class="btn" onclick="openPostEditor()">✍️ 공략 작성</button><div id="adminBtn" class="hidden" style="height:8px"></div><button id="adminButton" class="btn gold hidden" onclick="openAdmin()">🔐 관리자 페이지</button></div><div class="footer">불사 길드</div></section>
 <section id="adminView" class="hidden"><div class="topbar"><div><b>🔐 관리자 페이지</b><div class="small">가입 승인 · 추방 · 공략 관리</div></div><button class="iconbtn" onclick="backApp()">돌아가기</button></div><div class="card"><h2>가입 신청 / 길드원 관리</h2><div id="members"></div></div><div class="card"><h2>공략 관리</h2><div id="adminPosts"></div></div></section>
 </div><div id="modal" class="modal hidden"><div class="modalbox" id="modalBox"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -159,9 +159,42 @@ async function savePost(id){
  }catch(e){alert('저장 오류: '+(e?.message||e))}
  finally{if(btn){btn.disabled=false;btn.textContent='저장'}}
 }
+
+
+function openMyPage(){
+ if(!member)return;
+ $('modalBox').innerHTML=`<h2>👤 마이페이지</h2>
+ <div class="card" style="margin-top:12px">
+   <div class="small">현재 표시 닉네임</div>
+   <div style="font-size:22px;font-weight:1000;margin-top:5px">${esc(member.nickname||'')}</div>
+ </div>
+ <button class="btn" onclick="openNicknameEditor()">✏️ 닉네임 변경</button>
+ <div style="height:8px"></div>
+ <button class="btn secondary" onclick="closeModal()">닫기</button>`;
+ $('modal').classList.remove('hidden');
+}
+function openNicknameEditor(targetId=null){
+ const target=targetId?battleMembers.find(x=>String(x.id)===String(targetId)):member;
+ if(!target)return;
+ if(targetId&&!member?.is_admin)return alert('관리자만 다른 길드원의 닉네임을 변경할 수 있습니다.');
+ $('modalBox').innerHTML=`<h2>✏️ 닉네임 변경</h2><div class="small">사이트에 표시되는 닉네임만 변경됩니다.<br>로그인할 때 사용하는 기존 닉네임은 그대로입니다.</div><input id="newNickname" maxlength="30" placeholder="새 표시 닉네임" value="${esc(target.nickname||'')}"><button class="btn" onclick="saveNickname('${target.id}')">변경 저장</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">취소</button>`;
+ $('modal').classList.remove('hidden');
+}
+async function saveNickname(targetId){
+ const nickname=$('newNickname').value.trim();
+ if(!nickname)return alert('새 닉네임을 입력해주세요.');
+ if(nickname.length>30)return alert('닉네임은 30자 이하로 입력해주세요.');
+ if(String(targetId)!==String(member?.id)&&!member?.is_admin)return alert('본인 닉네임만 변경할 수 있습니다.');
+ const {error}=await sb.from('members').update({nickname}).eq('id',targetId);
+ if(error)return alert('닉네임 변경 오류: '+error.message);
+ if(String(targetId)===String(member.id)){member.nickname=nickname;$('who').textContent=nickname+'님 환영합니다.';}
+ closeModal();await loadPosts();await loadBattleData();
+ if(!$('adminView').classList.contains('hidden'))await renderAdmin();
+ alert('표시 닉네임이 변경되었습니다.\n로그인할 때는 기존 닉네임을 사용해주세요.');
+}
 async function openAdmin(){if(!member?.is_admin)return alert('관리자만 들어갈 수 있습니다.');show('adminView');await renderAdmin()}
 function backApp(){show('appView')}
-async function renderAdmin(){const {data:ms,error}=await sb.from('members').select('*').order('approved',{ascending:true});if(error){$('members').innerHTML='<div class="small">'+esc(error.message)+'</div>';return}$('members').innerHTML=(ms||[]).map(m=>`<div class="member"><div><strong>${esc(m.nickname)} ${m.is_admin?'👑':''}</strong><span>${m.approved?(m.is_admin?'관리자':'승인된 길드원'):'승인 대기'}</span></div><div class="row">${!m.approved?`<button class="iconbtn" onclick="approveMember('${m.id}')">승인</button>`:''}${m.id!==member.id?`<button class="iconbtn" onclick="kickMember('${m.id}','${esc(m.nickname)}')">추방</button>`:''}</div></div>`).join('')||'<div class="small">회원이 없습니다.</div>';$('adminPosts').innerHTML=posts.map(p=>`<div class="member"><div><strong>${esc(p.title)}</strong><span>${esc(p.category||p.cat||'공략')}</span></div><div class="row"><button class="iconbtn" onclick='editById(${JSON.stringify(String(p.id))})'>수정</button><button class="iconbtn" onclick='deletePost(${JSON.stringify(String(p.id))})'>삭제</button></div></div>`).join('')||'<div class="small">공략이 없습니다.</div>'}
+async function renderAdmin(){const {data:ms,error}=await sb.from('members').select('*').order('approved',{ascending:true});if(error){$('members').innerHTML='<div class="small">'+esc(error.message)+'</div>';return}$('members').innerHTML=(ms||[]).map(m=>`<div class="member"><div><strong>${esc(m.nickname)} ${m.is_admin?'👑':''}</strong><span>${m.approved?(m.is_admin?'관리자':'승인된 길드원'):'승인 대기'}</span></div><div class="row">${m.approved?`<button class="iconbtn" onclick="openNicknameEditor(\'${m.id}\')">닉네임</button>`:''}${!m.approved?`<button class="iconbtn" onclick="approveMember('${m.id}')">승인</button>`:''}${m.id!==member.id?`<button class="iconbtn" onclick="kickMember('${m.id}','${esc(m.nickname)}')">추방</button>`:''}</div></div>`).join('')||'<div class="small">회원이 없습니다.</div>';$('adminPosts').innerHTML=posts.map(p=>`<div class="member"><div><strong>${esc(p.title)}</strong><span>${esc(p.category||p.cat||'공략')}</span></div><div class="row"><button class="iconbtn" onclick='editById(${JSON.stringify(String(p.id))})'>수정</button><button class="iconbtn" onclick='deletePost(${JSON.stringify(String(p.id))})'>삭제</button></div></div>`).join('')||'<div class="small">공략이 없습니다.</div>'}
 async function approveMember(id){const {error}=await sb.from('members').update({approved:true}).eq('id',id);if(error)return alert(error.message);await renderAdmin()}
 async function kickMember(id,nick){if(!confirm(nick+' 님을 추방할까요?'))return;const {error}=await sb.from('members').delete().eq('id',id);if(error)return alert(error.message);await renderAdmin()}
 function editById(id){const p=posts.find(x=>String(x.id)===String(id));if(p)openPostEditor(p)}
