@@ -45,7 +45,7 @@ function toggleGuideGroup(key){
 function renderPostCard(p){
  const canEdit=member?.is_admin||String(p.author_id)===String(member?.id);
  const imgs=getImages(p);
- return `<div class="post"><span class="badge">${esc(p.category||p.cat||'공략')}</span><div class="title">${esc(p.title)}</div><div class="post-author">✍️ 작성자 · ${esc(p.author_nickname||'알 수 없음')}</div><div class="small">${new Date(p.created_at||Date.now()).toLocaleDateString('ko-KR')}</div><div class="post-body">${esc(p.content??p.body??'')}</div>${imgs.length?`<div class="image-grid">${imgs.map(u=>`<img src="${esc(u)}" loading="lazy">`).join('')}</div>`:''}${canEdit?`<div class="post-actions"><button class="iconbtn" onclick='editById(${JSON.stringify(String(p.id))})'>수정</button><button class="iconbtn" onclick='deletePost(${JSON.stringify(String(p.id))})'>삭제</button></div>`:''}</div>`;
+ return `<div class="post"><span class="badge">${esc(p.category||p.cat||'공략')}</span><div class="title">${esc(p.title)}</div><div class="post-author">✍️ 작성자 · ${esc(p.author_nickname||'알 수 없음')}</div><div class="small">${new Date(p.created_at||Date.now()).toLocaleDateString('ko-KR')}</div><div class="post-body">${esc(p.content??p.body??'')}</div>${imgs.length?`<div class="image-grid">${imgs.map(u=>`<img src="${esc(u)}" loading="lazy">`).join('')}</div>`:''}<div class="post-actions"><button class="iconbtn" onclick='addSameTitleById(${JSON.stringify(String(p.id))})'>➕ 추가</button>${canEdit?`<button class="iconbtn" onclick='editById(${JSON.stringify(String(p.id))})'>수정</button><button class="iconbtn" onclick='deletePost(${JSON.stringify(String(p.id))})'>삭제</button>`:''}</div></div>`;
 }
 function renderPosts(){
  if(category==='홈'){
@@ -122,10 +122,16 @@ function getImages(p){
  if(typeof p.image_url==='string' && p.image_url.trim().startsWith('[')){try{const a=JSON.parse(p.image_url);if(Array.isArray(a))return a.filter(Boolean)}catch(e){}}
  return p.image_url?[p.image_url]:[];
 }
+function addSameTitleById(id){
+ const p=posts.find(x=>String(x.id)===String(id));
+ if(!p)return;
+ openPostEditor(null,{category:p.category||p.cat||'길드전',title:p.title});
+}
+
 function openPostEditor(p=null){
- $('modalBox').innerHTML=`<h2>${p?'공략 수정':'공략 작성'}</h2><select id="pCat"><option>길드전</option><option>공성전</option><option>파괴신</option></select><input id="pTitle" placeholder="제목" value="${esc(p?.title||'')}"><textarea id="pBody" placeholder="공략 내용">${esc(p?.content??p?.body??'')}</textarea><label class="upload-label" for="pImages">📷 사진 선택 (여러 장 가능)</label><input id="pImages" type="file" accept="image/*" multiple style="display:none" onchange="showFileCount()"><div id="fileCount" class="upload-note">${p&&getImages(p).length?'기존 사진 '+getImages(p).length+'장 · 새 사진을 선택하면 추가됩니다.':'선택된 사진 없음'}</div><button class="btn" onclick="savePost('${p?.id||''}')">저장</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">취소</button>`;
+ $('modalBox').innerHTML=`<h2>${p?'공략 수정':'공략 작성'}</h2><select id="pCat"><option>길드전</option><option>공성전</option><option>파괴신</option></select><input id="pTitle" placeholder="제목" value="${esc(p?.title||preset?.title||'')}"><textarea id="pBody" placeholder="공략 내용">${esc(p?.content??p?.body??'')}</textarea><label class="upload-label" for="pImages">📷 사진 선택 (여러 장 가능)</label><input id="pImages" type="file" accept="image/*" multiple style="display:none" onchange="showFileCount()"><div id="fileCount" class="upload-note">${p&&getImages(p).length?'기존 사진 '+getImages(p).length+'장 · 새 사진을 선택하면 추가됩니다.':'선택된 사진 없음'}</div><button class="btn" onclick="savePost('${p?.id||''}')">저장</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">취소</button>`;
  $('modal').classList.remove('hidden');
- if(p)$('pCat').value=(p.category||p.cat)==='강림'?'공성전':(p.category||p.cat||'길드전');
+ if(p)$('pCat').value=(p.category||p.cat)==='강림'?'공성전':(p.category||p.cat||'길드전');else if(preset)$('pCat').value=(preset.category==='강림'?'공성전':preset.category||'길드전');
 }
 function showFileCount(){const n=$('pImages').files.length;$('fileCount').textContent=n?`${n}장 선택됨`:'선택된 사진 없음'}
 async function uploadImages(files){
