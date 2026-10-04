@@ -277,3 +277,16 @@ function closeModal(){$('modal').classList.add('hidden')}$('modal').addEventList
   .logo-block,.logo-block img{height:160px!important}
 }
 </style>
+
+<style>
+/* banner fill fix */
+.bulsa-header{grid-template-columns:minmax(0,1fr) 92px!important;padding:0!important;gap:8px!important}
+.logo-block{width:100%!important;height:168px!important;overflow:hidden!important}
+.logo-block img{width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;display:block!important}
+.header-actions{width:92px!important;margin-right:8px!important}
+@media(max-width:430px){
+ .bulsa-header{grid-template-columns:minmax(0,1fr) 92px!important;min-height:160px!important}
+ .logo-block{height:160px!important}
+ .logo-block img{height:100%!important;width:100%!important;object-fit:cover!important}
+}
+</style>
