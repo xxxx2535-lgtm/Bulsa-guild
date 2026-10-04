@@ -62,7 +62,14 @@
 <script>
 const SUPABASE_URL='https://ltvpxypdxtaxfnivmgni.supabase.co';
 const SUPABASE_KEY='sb_publishable_AKTOoPDYpcvX2qUfiYoH0Q_dNS4t9Sc';
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+  auth:{
+    persistSession:true,
+    autoRefreshToken:true,
+    detectSessionInUrl:true,
+    storage:window.localStorage
+  }
+});
 let member=null,posts=[],category='홈',battleMembers=[],battleRecords=[],activeSeason=null,noticeRow=null;
 const $=id=>document.getElementById(id); const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 function show(id){['loginView','appView','adminView'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden')}
