@@ -290,3 +290,54 @@ function closeModal(){$('modal').classList.add('hidden')}$('modal').addEventList
  .logo-block img{height:100%!important;width:100%!important;object-fit:cover!important}
 }
 </style>
+
+<style>
+/* v18: banner uses the full header width; buttons overlay on the right */
+.bulsa-header{
+  position:relative!important;
+  display:block!important;
+  min-height:0!important;
+  height:auto!important;
+  margin:0 -12px 8px!important;
+  padding:0!important;
+  overflow:hidden!important;
+  background:#2b0300!important;
+}
+.logo-block{
+  width:100%!important;
+  height:auto!important;
+  display:block!important;
+  overflow:hidden!important;
+}
+.logo-block img{
+  display:block!important;
+  width:100%!important;
+  height:auto!important;
+  max-width:none!important;
+  object-fit:contain!important;
+  object-position:center!important;
+}
+.header-actions{
+  position:absolute!important;
+  right:10px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  width:92px!important;
+  margin:0!important;
+  padding:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:7px!important;
+  z-index:3!important;
+}
+.header-actions .iconbtn{
+  width:100%!important;
+  background:rgba(20,20,20,.92)!important;
+}
+@media(max-width:430px){
+  .bulsa-header{min-height:0!important;height:auto!important}
+  .logo-block,.logo-block img{height:auto!important}
+  .header-actions{right:8px!important;width:76px!important}
+  .header-actions .iconbtn{font-size:12px!important;padding:8px 4px!important}
+}
+</style>
