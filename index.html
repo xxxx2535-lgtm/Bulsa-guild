@@ -47,13 +47,8 @@
 </head><body><div class="wrap">
 <section id="loginView"><div class="logo">불사</div><div class="sub">🔥 불사 길드 전용 공략실</div><div class="card hero"><h2>길드원 전용 입장</h2><div class="small">가입한 닉네임과 비밀번호를 입력하세요.</div><input id="loginEmail" placeholder="닉네임"><input id="loginPass" type="password" placeholder="비밀번호"><button class="btn" onclick="login()">입장하기</button><div style="height:8px"></div><button class="btn secondary" onclick="showRegister()">처음 오셨나요? 가입 신청</button><div id="loginMsg" class="small" style="margin-top:10px;color:#ff8f80"></div></div><div class="notice">🔒 비밀번호는 이 화면이나 소스코드에 저장되지 않습니다.</div></section>
 <section id="appView" class="hidden"><div class="topbar bulsa-header">
-  <div class="creator-block">
-    <div class="creator-small">👑 만든이</div>
-    <div class="creator-name">김다율도율아부지</div>
-    <div id="who" class="creator-welcome"></div>
-  </div>
   <div class="logo-block">
-    <img src="./a_wide_horizontal_banner_style_graphic_with_a_dra.png?v=1" alt="불사">
+    <img src="./bulsa-banner.png?v=2" alt="불사 길드 배너">
   </div>
   <div class="header-actions">
     <button class="iconbtn" onclick="openMyPage()">마이페이지</button>
@@ -262,3 +257,23 @@ async function deletePost(id){const p=posts.find(x=>String(x.id)===String(id));i
 function closeModal(){$('modal').classList.add('hidden')}$('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
 (async()=>{const {data:{session}}=await sb.auth.getSession();if(session?.user)await enterWithUser(session.user)})();
 </script></body></html>
+
+<style>
+.bulsa-header{
+  grid-template-columns:1fr auto!important;
+  min-height:168px!important;
+  padding:0 8px!important;
+}
+.logo-block{height:168px!important}
+.logo-block img{
+  width:100%!important;
+  height:168px!important;
+  object-fit:contain!important;
+  object-position:left center!important;
+}
+.header-actions{width:92px!important}
+@media(max-width:430px){
+  .bulsa-header{grid-template-columns:1fr 92px!important;min-height:160px!important}
+  .logo-block,.logo-block img{height:160px!important}
+}
+</style>
