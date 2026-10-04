@@ -41,6 +41,19 @@
  .header-actions .iconbtn{font-size:13px!important;padding:9px 5px!important}
 }
 
+
+.status-badge{display:inline-block;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:900;margin-left:6px}
+.status-verified{background:#123d1d;color:#7dff98;border:1px solid #2d8b43}
+.status-testing{background:#29165a;color:#c9a9ff;border:1px solid #6541c7}
+.status-old{background:#5b2b06;color:#ffc06b;border:1px solid #b96819}
+.home-status{background:linear-gradient(145deg,#24110d,#121212);border:1px solid #6f2b1c;border-radius:16px;padding:14px;margin-bottom:12px}
+.missing-list{color:#ff766c;font-weight:900;line-height:1.6;margin-top:8px}
+.hof-btn{margin:0 0 14px;background:linear-gradient(135deg,#6f3100,#d88a00);border:1px solid #ffc34d}
+.comment{background:#111;border:1px solid #333;border-radius:12px;padding:11px;margin:8px 0}
+.comment-head{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#aaa;margin-bottom:5px}
+.hof-season{border:1px solid #75420d;background:linear-gradient(145deg,#2b1908,#111);border-radius:15px;padding:14px;margin:10px 0}
+.hof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}
+.hof-cell{text-align:center;background:#171717;border:1px solid #4a3520;border-radius:11px;padding:9px 4px;font-size:12px}
 </style>
 <link rel="icon" type="image/png" sizes="512x512" href="./icon.png?v=2">
 <link rel="apple-touch-icon" sizes="512x512" href="./icon.png?v=2">
@@ -70,7 +83,7 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
     storage:window.localStorage
   }
 });
-let member=null,posts=[],category='홈',battleMembers=[],battleRecords=[],activeSeason=null,noticeRow=null;
+let member=null,posts=[],category='홈',battleMembers=[],battleRecords=[],activeSeason=null,noticeRow=null,hallOfFame=[];
 const $=id=>document.getElementById(id); const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 function show(id){['loginView','appView','adminView'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden')}
 function nickEmail(n){return encodeURIComponent(n.trim().toLowerCase())+'@bulsa-guild.local'}
@@ -92,10 +105,16 @@ function toggleGuideGroup(key){
  if(expandedGuideGroups.has(key)) expandedGuideGroups.delete(key); else expandedGuideGroups.add(key);
  renderPosts();
 }
+function statusInfo(status){
+ const x=status||'검증완료';
+ if(x==='테스트중')return {label:'🧪 테스트중',cls:'status-testing'};
+ if(x==='구버전')return {label:'⚠️ 구버전',cls:'status-old'};
+ return {label:'✅ 검증완료',cls:'status-verified'};
+}
 function renderPostCard(p){
  const canEdit=member?.is_admin||String(p.author_id)===String(member?.id);
- const imgs=getImages(p);
- return `<div class="post"><span class="badge">${esc(p.category||p.cat||'공략')}</span><div class="title">${esc(p.title)}</div><div class="post-author">✍️ 작성자 · ${esc(p.author_nickname||'알 수 없음')}</div><div class="small">${new Date(p.created_at||Date.now()).toLocaleDateString('ko-KR')}</div><div class="post-body">${esc(p.content??p.body??'')}</div>${imgs.length?`<div class="image-grid">${imgs.map(u=>`<img src="${esc(u)}" loading="lazy">`).join('')}</div>`:''}<div class="post-actions">${canEdit?`<button class="iconbtn" onclick='editById(${JSON.stringify(String(p.id))})'>수정</button><button class="iconbtn" onclick='deletePost(${JSON.stringify(String(p.id))})'>삭제</button>`:''}<button type="button" class="iconbtn" onclick='event.stopPropagation();addSameTitleById(${JSON.stringify(String(p.id))})'>➕ 추가</button></div></div>`;
+ const imgs=getImages(p),st=statusInfo(p.status);
+ return `<div class="post"><span class="badge">${esc(p.category||p.cat||'공략')}</span><span class="status-badge ${st.cls}">${st.label}</span><div class="title">${esc(p.title)}</div><div class="post-author">✍️ 작성자 · ${esc(p.author_nickname||'알 수 없음')}</div><div class="small">${new Date(p.created_at||Date.now()).toLocaleDateString('ko-KR')}</div><div class="post-body">${esc(p.content??p.body??'')}</div>${imgs.length?`<div class="image-grid">${imgs.map(u=>`<img src="${esc(u)}" loading="lazy">`).join('')}</div>`:''}<div class="post-actions">${canEdit?`<button class="iconbtn" onclick='editById(${JSON.stringify(String(p.id))})'>수정</button><button class="iconbtn" onclick='deletePost(${JSON.stringify(String(p.id))})'>삭제</button>`:''}<button type="button" class="iconbtn" onclick='event.stopPropagation();openComments(${JSON.stringify(String(p.id))})'>💬 댓글</button><button type="button" class="iconbtn" onclick='event.stopPropagation();addSameTitleById(${JSON.stringify(String(p.id))})'>➕ 추가</button></div></div>`;
 }
 function renderPosts(){
  if(category==='홈'){
@@ -135,16 +154,23 @@ function attackRanking(stats){
 }
 function defenseRanking(stats){return [...stats].sort((a,b)=>b.defenses-a.defenses||b.attacks-a.attacks||a.member.nickname.localeCompare(b.member.nickname,'ko')).filter(x=>x.defenses>0)}
 async function loadBattleData(){
- const [{data:ms},{data:ss,error:se},{data:no}]=await Promise.all([sb.from('members').select('id,nickname,approved,is_admin'),sb.from('guild_seasons').select('*').order('start_date',{ascending:false}),sb.from('guild_notices').select('*').order('id',{ascending:true}).limit(1).maybeSingle()]);
- battleMembers=(ms||[]);noticeRow=no||null;if(se){console.error(se);return}
+ const [{data:ms},{data:ss,error:se},{data:no},{data:hf}]=await Promise.all([sb.from('members').select('id,nickname,approved,is_admin'),sb.from('guild_seasons').select('*').order('start_date',{ascending:false}),sb.from('guild_notices').select('*').order('id',{ascending:true}).limit(1).maybeSingle(),sb.from('guild_hall_of_fame').select('*').order('season_start',{ascending:false})]);
+ battleMembers=(ms||[]);noticeRow=no||null;hallOfFame=hf||[];if(se){console.error(se);return}
  activeSeason=(ss||[]).find(x=>x.is_active)||null;
  if(activeSeason){const {data:rs}=await sb.from('guild_battle_records').select('*').eq('season_id',activeSeason.id).order('battle_date',{ascending:false});battleRecords=rs||[]}else battleRecords=[];
  if(category==='전적')renderBattlePage();else if(category==='홈')renderHome();
 }
 function renderHome(){
  const stats=seasonStats(),atk=attackRanking(stats)[0],def=defenseRanking(stats)[0];
- const notice=noticeRow?.content||'등록된 공지가 없습니다.';
- $('postList').innerHTML=`<div class="card notice-home"><h2>📢 길드 공지</h2><div class="post-body">${esc(notice)}</div>${member?.is_admin?`<div style="height:10px"></div><button class="btn gold" onclick="editNotice()">공지 수정</button>`:''}</div><div class="battle-top"><div class="leaderbox"><b>⚔️ 이번 시즌 공격대장</b><div class="leader-name">${atk?'👑 '+esc(atk.member.nickname):'-'}</div><div class="small">${atk?`${atk.wins}승 ${atk.losses}패 · ${(atk.rate*100).toFixed(1)}% · ${atk.attacks}칼`:'기록 없음'}</div></div><div class="leaderbox"><b>🛡️ 이번 시즌 방어대장</b><div class="leader-name">${def?'👑 '+esc(def.member.nickname):'-'}</div><div class="small">${def?`${def.defenses}방어`:'기록 없음'}</div></div></div><img class="home-image" src="./home.png?v=1" alt="불사 길드 홍보 이미지">`;
+ const notice=noticeRow?.content||'등록된 공지가 없습니다.',today=todayKST();
+ const todaySet=new Set(battleRecords.filter(r=>r.battle_date===today).map(r=>String(r.member_id)));
+ const approved=battleMembers.filter(m=>m.approved);
+ const missing=approved.filter(m=>!todaySet.has(String(m.id)));
+ $('postList').innerHTML=`<div class="card notice-home"><h2>📢 길드 공지</h2><div class="post-body">${esc(notice)}</div>${member?.is_admin?`<div style="height:10px"></div><button class="btn gold" onclick="editNotice()">공지 수정</button>`:''}</div>
+ <div class="home-status"><b>⚔️ 길드전 승패 미입력자</b><div class="small" style="margin-top:5px">${todaySet.size} / ${approved.length}명 입력 완료</div><div class="${missing.length?'missing-list':'small'}">${missing.length?'⚠️ '+missing.map(m=>esc(m.nickname)).join(' · '):'✅ 전원 입력 완료'}</div></div>
+ <div class="battle-top"><div class="leaderbox"><b>⚔️ 이번 시즌 공격대장</b><div class="leader-name">${atk?'👑 '+esc(atk.member.nickname):'-'}</div><div class="small">${atk?`${atk.wins}승 ${atk.losses}패 · ${(atk.rate*100).toFixed(1)}% · ${atk.attacks}칼`:'기록 없음'}</div></div><div class="leaderbox"><b>🛡️ 이번 시즌 방어대장</b><div class="leader-name">${def?'👑 '+esc(def.member.nickname):'-'}</div><div class="small">${def?`${def.defenses}방어`:'기록 없음'}</div></div></div>
+ <button class="btn gold hof-btn" onclick="openHallOfFame()">🏆 명예의 전당</button>
+ <img class="home-image" src="./home.png?v=1" alt="불사 길드 홍보 이미지">`;
 }
 async function editNotice(){if(!member?.is_admin)return;const content=prompt('홈 화면 공지 내용을 입력하세요.',noticeRow?.content||'');if(content===null)return;let res;if(noticeRow?.id)res=await sb.from('guild_notices').update({content,updated_at:new Date().toISOString(),updated_by:member.id}).eq('id',noticeRow.id);else res=await sb.from('guild_notices').insert({content,updated_by:member.id});if(res.error)return alert('공지 저장 오류: '+res.error.message);await loadBattleData()}
 function renderBattlePage(){
@@ -163,7 +189,30 @@ function openBattleEditor(memberId){
 function updateAttackCount(){const w=Number($('bWins')?.value||0),l=Number($('bLosses')?.value||0);const el=$('attackCount');if(el){el.textContent=`⚔️ 오늘 사용 칼 ${w+l} / 5`;el.style.borderColor=(w+l)>5?'#e52525':'#674514';}} async function saveBattleRecord(memberId){const wins=Number($('bWins').value||0),losses=Number($('bLosses').value||0),defenses=Number($('bDefs').value||0);if(wins<0||losses<0||defenses<0||wins+losses>5)return alert('공격 승+패 합계는 최대 5입니다.');if(!member?.is_admin&&String(memberId)!==String(member.id))return alert('본인 기록만 입력할 수 있습니다.');const payload={season_id:activeSeason.id,member_id:memberId,battle_date:todayKST(),wins,losses,defenses,updated_at:new Date().toISOString()};const {error}=await sb.from('guild_battle_records').upsert(payload,{onConflict:'season_id,member_id,battle_date'});if(error)return alert('저장 오류: '+error.message);closeModal();await loadBattleData()}
 function openAdminBattleEntry(){const opts=battleMembers.filter(m=>m.approved).map(m=>`<option value="${m.id}">${esc(m.nickname)}</option>`).join('');$('modalBox').innerHTML=`<h2>관리자 대리 입력</h2><select id="adminBattleMember">${opts}</select><button class="btn" onclick="adminPickBattleMember()">선택</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">취소</button>`;$('modal').classList.remove('hidden')}
 function adminPickBattleMember(){const id=$('adminBattleMember').value;closeModal();openBattleEditor(id)}
-async function endSeason(){if(!member?.is_admin||!activeSeason)return;if(!confirm('현재 시즌을 종료하고 오늘부터 새 시즌을 시작할까요?\n지난 시즌 기록은 그대로 보관됩니다.'))return;const today=todayKST();let {error}=await sb.from('guild_seasons').update({is_active:false,end_date:today}).eq('id',activeSeason.id);if(error)return alert('시즌 종료 오류: '+error.message);({error}=await sb.from('guild_seasons').insert({start_date:today,is_active:true}));if(error)return alert('새 시즌 생성 오류: '+error.message);await loadBattleData();alert('새 시즌이 시작되었습니다.')}
+async function endSeason(){
+ if(!member?.is_admin||!activeSeason)return;
+ if(!confirm('현재 시즌을 종료하고 오늘부터 새 시즌을 시작할까요?\n현재 공격대장·방어대장·MVP가 명예의 전당에 저장됩니다.'))return;
+ const stats=seasonStats(),atk=attackRanking(stats)[0],def=defenseRanking(stats)[0];
+ const mvp=[...stats].sort((a,b)=>(b.wins+b.defenses)-(a.wins+a.defenses)||b.rate-a.rate)[0];
+ const today=todayKST();
+ const hofPayload={season_id:activeSeason.id,attack_member_id:atk?.member.id||null,defense_member_id:def?.member.id||null,mvp_member_id:mvp?.member.id||null,attack_wins:atk?.wins||0,attack_losses:atk?.losses||0,defense_count:def?.defenses||0,mvp_score:mvp?(mvp.wins+mvp.defenses):0,season_start:activeSeason.start_date,season_end:today};
+ let {error}=await sb.from('guild_hall_of_fame').upsert(hofPayload,{onConflict:'season_id'});
+ if(error)return alert('명예의 전당 저장 오류: '+error.message);
+ ({error}=await sb.from('guild_seasons').update({is_active:false,end_date:today}).eq('id',activeSeason.id));
+ if(error)return alert('시즌 종료 오류: '+error.message);
+ ({error}=await sb.from('guild_seasons').insert({start_date:today,is_active:true}));
+ if(error)return alert('새 시즌 생성 오류: '+error.message);
+ await loadBattleData();alert('명예의 전당 저장 완료! 새 시즌이 시작되었습니다.');
+}
+
+function memberNameById(id){return battleMembers.find(m=>String(m.id)===String(id))?.nickname||'-'}
+async function openHallOfFame(){
+ const {data,error}=await sb.from('guild_hall_of_fame').select('*').order('season_start',{ascending:false});
+ if(error)return alert('명예의 전당 불러오기 오류: '+error.message);
+ const rows=data||[];
+ $('modalBox').innerHTML=`<h2>🏆 명예의 전당</h2><div class="small">역대 시즌 공격대장 · 방어대장 · MVP</div>${rows.map((h,i)=>`<div class="hof-season"><b>🔥 시즌 ${rows.length-i}</b><div class="small">${fmtDate(h.season_start)} ~ ${fmtDate(h.season_end)}</div><div class="hof-grid"><div class="hof-cell">⚔️<br><b>공격대장</b><br>${esc(memberNameById(h.attack_member_id))}<br><span class="small">${h.attack_wins||0}승 ${h.attack_losses||0}패</span></div><div class="hof-cell">🛡️<br><b>방어대장</b><br>${esc(memberNameById(h.defense_member_id))}<br><span class="small">${h.defense_count||0}방어</span></div><div class="hof-cell">👑<br><b>시즌 MVP</b><br>${esc(memberNameById(h.mvp_member_id))}<br><span class="small">${Number(h.mvp_score||0)}점</span></div></div></div>`).join('')||'<div class="card" style="margin-top:12px"><div class="small">아직 등록된 지난 시즌이 없습니다.<br>현재 시즌을 종료하면 자동으로 기록됩니다.</div></div>'}<button class="btn secondary" onclick="closeModal()">닫기</button>`;
+ $('modal').classList.remove('hidden');
+}
 async function showPastSeasons(){const {data,error}=await sb.from('guild_seasons').select('*').eq('is_active',false).order('start_date',{ascending:false});if(error)return alert(error.message);$('modalBox').innerHTML=`<h2>📚 지난 시즌 기록</h2>${(data||[]).map(s=>`<button class="btn secondary" style="margin-bottom:8px" onclick="openPastSeason(${s.id})">${fmtDate(s.start_date)} ~ ${fmtDate(s.end_date)}</button>`).join('')||'<div class="small">지난 시즌이 없습니다.</div>'}<button class="btn secondary" onclick="closeModal()">닫기</button>`;$('modal').classList.remove('hidden')}
 async function openPastSeason(id){const [{data:s},{data:rs}]=await Promise.all([sb.from('guild_seasons').select('*').eq('id',id).single(),sb.from('guild_battle_records').select('*').eq('season_id',id)]);const old=battleRecords,oldSeason=activeSeason;battleRecords=rs||[];activeSeason=s;const stats=seasonStats(),atk=attackRanking(stats).slice(0,3),def=defenseRanking(stats).slice(0,3);const lines=stats.sort((a,b)=>b.attacks-a.attacks||b.rate-a.rate).map(x=>`<div class="battle-row"><strong>${esc(x.member.nickname)}</strong><div class="battle-stats">⚔️ ${x.wins}승 ${x.losses}패 · ${(x.rate*100).toFixed(1)}% · ${x.attacks}칼<br>🛡️ ${x.defenses}방어</div></div>`).join('');$('modalBox').innerHTML=`<h2>📅 ${fmtDate(s.start_date)} ~ ${fmtDate(s.end_date)}</h2><div class="leaderbox"><b>⚔️ 공격 TOP3</b>${atk.map((x,i)=>`<div class="rankline">${i+1}위 ${esc(x.member.nickname)} · ${(x.rate*100).toFixed(1)}%</div>`).join('')||'기록 없음'}</div><div style="height:8px"></div><div class="leaderbox"><b>🛡️ 방어 TOP3</b>${def.map((x,i)=>`<div class="rankline">${i+1}위 ${esc(x.member.nickname)} · ${x.defenses}방어</div>`).join('')||'기록 없음'}</div>${lines}<button class="btn secondary" onclick="closeModal()">닫기</button>`;battleRecords=old;activeSeason=oldSeason}
 
@@ -180,7 +229,7 @@ function addSameTitleById(id){
 }
 
 function openPostEditor(p=null,preset=null){
- $('modalBox').innerHTML=`<h2>${p?'공략 수정':'공략 작성'}</h2><select id="pCat"><option>길드전</option><option>공성전</option><option>파괴신</option></select><input id="pTitle" placeholder="제목" value="${esc(p?.title||preset?.title||'')}"><textarea id="pBody" placeholder="공략 내용">${esc(p?.content??p?.body??'')}</textarea><label class="upload-label" for="pImages">📷 사진 선택 (여러 장 가능)</label><input id="pImages" type="file" accept="image/*" multiple style="display:none" onchange="showFileCount()"><div id="fileCount" class="upload-note">${p&&getImages(p).length?'기존 사진 '+getImages(p).length+'장 · 새 사진을 선택하면 추가됩니다.':'선택된 사진 없음'}</div><button class="btn" onclick="savePost('${p?.id||''}')">저장</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">취소</button>`;
+ $('modalBox').innerHTML=`<h2>${p?'공략 수정':'공략 작성'}</h2><select id="pCat"><option>길드전</option><option>공성전</option><option>파괴신</option></select><input id="pTitle" placeholder="제목" value="${esc(p?.title||preset?.title||'')}"><textarea id="pBody" placeholder="공략 내용">${esc(p?.content??p?.body??'')}</textarea><label style="display:block;font-weight:900;margin-top:4px">🏷️ 공략 상태</label><select id="pStatus"><option value="검증완료">✅ 검증완료</option><option value="테스트중">🧪 테스트중</option><option value="구버전">⚠️ 구버전</option></select><label class="upload-label" for="pImages">📷 사진 선택 (여러 장 가능)</label><input id="pImages" type="file" accept="image/*" multiple style="display:none" onchange="showFileCount()"><div id="fileCount" class="upload-note">${p&&getImages(p).length?'기존 사진 '+getImages(p).length+'장 · 새 사진을 선택하면 추가됩니다.':'선택된 사진 없음'}</div><button class="btn" onclick="savePost('${p?.id||''}')">저장</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">취소</button>`;
  $('modal').classList.remove('hidden');
  if(p){
   $('pCat').value=(p.category||p.cat)==='강림'?'공성전':(p.category||p.cat||'길드전');
@@ -213,7 +262,7 @@ async function savePost(id){
  try{
    const newUrls=await uploadImages(Array.from($('pImages').files||[]));
    const allUrls=[...getImages(old||{}),...newUrls];
-   const payload={category:$('pCat').value,title,content,author_id:old?.author_id||member.id,updated_at:new Date().toISOString()};
+   const payload={category:$('pCat').value,title,content,status:$('pStatus')?.value||'검증완료',author_id:old?.author_id||member.id,updated_at:new Date().toISOString()};
    // Current DB has image_url; multiple URLs are stored as JSON text there for compatibility.
    payload.image_url=allUrls.length?JSON.stringify(allUrls):null;
    let res=id?await sb.from('guides').update(payload).eq('id',id):await sb.from('guides').insert(payload);
@@ -223,6 +272,25 @@ async function savePost(id){
  finally{if(btn){btn.disabled=false;btn.textContent='저장'}}
 }
 
+
+
+async function openComments(guideId){
+ const p=posts.find(x=>String(x.id)===String(guideId));if(!p)return;
+ const [{data:cs,error},{data:ms}]=await Promise.all([sb.from('guide_comments').select('*').eq('guide_id',guideId).order('created_at',{ascending:true}),sb.from('members').select('id,nickname')]);
+ if(error)return alert('댓글 불러오기 오류: '+error.message);
+ const names=Object.fromEntries((ms||[]).map(m=>[String(m.id),m.nickname]));
+ $('modalBox').innerHTML=`<h2>💬 댓글 · ${esc(p.title)}</h2><div id="commentList">${(cs||[]).map(c=>`<div class="comment"><div class="comment-head"><b>${esc(names[String(c.author_id)]||'알 수 없음')}</b><span>${new Date(c.created_at).toLocaleString('ko-KR')}</span></div><div>${esc(c.content)}</div>${(member?.is_admin||String(c.author_id)===String(member?.id))?`<button class="mini-btn" style="margin-top:7px" onclick="deleteComment(${c.id},'${guideId}')">삭제</button>`:''}</div>`).join('')||'<div class="small">아직 댓글이 없습니다.</div>'}</div><textarea id="commentText" style="min-height:90px" maxlength="500" placeholder="댓글을 입력하세요."></textarea><button class="btn" onclick="saveComment('${guideId}')">댓글 등록</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">닫기</button>`;
+ $('modal').classList.remove('hidden');
+}
+async function saveComment(guideId){
+ const content=$('commentText').value.trim();if(!content)return alert('댓글 내용을 입력해주세요.');
+ const {error}=await sb.from('guide_comments').insert({guide_id:Number(guideId),author_id:member.id,content});
+ if(error)return alert('댓글 등록 오류: '+error.message);await openComments(guideId);
+}
+async function deleteComment(id,guideId){
+ if(!confirm('댓글을 삭제할까요?'))return;
+ const {error}=await sb.from('guide_comments').delete().eq('id',id);if(error)return alert('댓글 삭제 오류: '+error.message);await openComments(guideId);
+}
 
 function openMyPage(){
  if(!member)return;
