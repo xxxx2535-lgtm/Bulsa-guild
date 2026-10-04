@@ -131,7 +131,13 @@ function addSameTitleById(id){
 function openPostEditor(p=null,preset=null){
  $('modalBox').innerHTML=`<h2>${p?'공략 수정':'공략 작성'}</h2><select id="pCat"><option>길드전</option><option>공성전</option><option>파괴신</option></select><input id="pTitle" placeholder="제목" value="${esc(p?.title||preset?.title||'')}"><textarea id="pBody" placeholder="공략 내용">${esc(p?.content??p?.body??'')}</textarea><label class="upload-label" for="pImages">📷 사진 선택 (여러 장 가능)</label><input id="pImages" type="file" accept="image/*" multiple style="display:none" onchange="showFileCount()"><div id="fileCount" class="upload-note">${p&&getImages(p).length?'기존 사진 '+getImages(p).length+'장 · 새 사진을 선택하면 추가됩니다.':'선택된 사진 없음'}</div><button class="btn" onclick="savePost('${p?.id||''}')">저장</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">취소</button>`;
  $('modal').classList.remove('hidden');
- if(p)$('pCat').value=(p.category||p.cat)==='강림'?'공성전':(p.category||p.cat||'길드전');else if(preset)$('pCat').value=(preset.category==='강림'?'공성전':preset.category||'길드전');
+ if(p){
+  $('pCat').value=(p.category||p.cat)==='강림'?'공성전':(p.category||p.cat||'길드전');
+}else if(preset){
+  $('pCat').value=(preset.category==='강림'?'공성전':preset.category||'길드전');
+}else if(category==='길드전'||category==='공성전'||category==='파괴신'){
+  $('pCat').value=category;
+}
 }
 function showFileCount(){const n=$('pImages').files.length;$('fileCount').textContent=n?`${n}장 선택됨`:'선택된 사진 없음'}
 async function uploadImages(files){
