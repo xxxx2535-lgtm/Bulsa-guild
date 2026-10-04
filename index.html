@@ -104,10 +104,11 @@ function renderPosts(){
    return;
  }
  const q=($('searchInput')?.value||'').trim().toLocaleLowerCase('ko-KR');
- const qNorm=normalizeGuideTitle(q);
+ const terms=q.split(/\s+/).map(normalizeGuideTitle).filter(Boolean);
  const a=posts.filter(p=>{
    const catOk=category==='전체'||(p.category||p.cat)===category;
-   return catOk && (!qNorm || normalizeGuideTitle(p.title).includes(qNorm));
+   const titleNorm=normalizeGuideTitle(p.title);
+   return catOk && (!terms.length || terms.every(term=>titleNorm.includes(term)));
  });
  $('welcome').textContent=category==='전체'?'불사 공략실':category+' 공략';
  if(!a.length){$('postList').innerHTML=`<div class="card"><div class="small">${q?'검색 결과가 없습니다.':'등록된 공략이 없습니다.'}</div></div>`;return;}
