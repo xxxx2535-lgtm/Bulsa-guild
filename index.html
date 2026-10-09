@@ -173,7 +173,7 @@
     <button class="iconbtn" onclick="logout()">로그아웃</button>
   </div>
 </div>
-<div class="searchbox"><span class="searchicon">🔎</span><input id="searchInput" placeholder="제목 검색 (단어 일부만 입력해도 됩니다)" oninput="renderPosts()"></div><div class="tabs"><button class="tab active" onclick="setCategory('홈',this)">🏠 홈</button><button class="tab" onclick="setCategory('전체',this)">전체</button><button class="tab" onclick="setCategory('길드전',this)">⚔️ 길드전</button><button class="tab" onclick="setCategory('공성전',this)">🏰 공성전</button><button class="tab" onclick="setCategory('파괴신',this)">💀 파괴신</button></div><div class="card hero"><h2 id="welcome">불사 공략실</h2><div class="small">승인된 길드원은 누구나 공략을 작성할 수 있습니다.</div></div><div id="postList"></div><div id="writeArea"><button class="btn" onclick="openPostEditor(null,{category:category})">✍️ 공략 작성</button><div id="adminBtn" class="hidden" style="height:8px"></div><button id="adminButton" class="btn gold hidden" onclick="openAdmin()">🔐 관리자 페이지</button></div><div class="footer">불사 길드</div></section>
+<div class="searchbox"><span class="searchicon">🔎</span><input id="searchInput" placeholder="제목 검색 (단어 일부만 입력해도 됩니다)" oninput="renderPosts()"></div><div class="tabs"><button class="tab active" onclick="setCategory('홈',this)">🏠 홈</button><button class="tab" onclick="setCategory('전체',this)">전체</button><button class="tab" onclick="setCategory('길드전',this)">⚔️ 길드전</button><button class="tab" onclick="setCategory('공성전',this)">🏰 공성전</button><button class="tab" onclick="setCategory('파괴신',this)">💀 파괴신</button></div><div class="card hero"><h2 id="welcome">불사 공략실</h2><div id="categoryDescText" class="small">승인된 길드원은 누구나 공략을 작성할 수 있습니다.</div><button id="editCategoryDescBtn" class="mini-btn hidden" style="margin-top:10px" onclick="editCategoryDescription()">✏️ 안내 문구 수정</button></div><div id="postList"></div><div id="writeArea"><button class="btn" onclick="openPostEditor(null,{category:category})">✍️ 공략 작성</button><div id="adminBtn" class="hidden" style="height:8px"></div><button id="adminButton" class="btn gold hidden" onclick="openAdmin()">🔐 관리자 페이지</button></div><div class="footer">불사 길드</div></section>
 <section id="adminView" class="hidden"><div class="topbar"><div><b>🔐 관리자 페이지</b><div class="small">가입 승인 · 추방 · 공략 관리</div></div><button class="iconbtn" onclick="backApp()">돌아가기</button></div><div class="card"><h2>가입 신청 / 길드원 관리 <span id="memberCount" style="color:#ffc83d"></span></h2><div id="members"></div></div><div class="card"><h2>공략 관리</h2><div id="adminPosts"></div></div></section>
 </div><div id="modal" class="modal hidden"><div class="modalbox" id="modalBox"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -193,7 +193,7 @@ const $=id=>document.getElementById(id); const esc=s=>String(s??'').replace(/[&<
 function show(id){['loginView','appView','adminView'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden')}
 function nickEmail(n){return encodeURIComponent(n.trim().toLowerCase())+'@bulsa-guild.local'}
 async function login(){ $('loginMsg').textContent='로그인 중...'; const nickname=$('loginEmail').value.trim(),password=$('loginPass').value; if(!nickname||!password){$('loginMsg').textContent='닉네임과 비밀번호를 입력해주세요.';return} const email=nickEmail(nickname); const {data,error}=await sb.auth.signInWithPassword({email,password}); if(error){$('loginMsg').textContent='로그인 실패: 닉네임 또는 비밀번호를 확인해주세요.';return} await enterWithUser(data.user); }
-async function enterWithUser(user){ const {data:m,error}=await sb.from('members').select('*').eq('id',user.id).maybeSingle(); if(error){$('loginMsg').textContent='회원정보 확인 오류: '+error.message;return} if(!m){await sb.auth.signOut();$('loginMsg').textContent='가입 신청 정보가 없습니다.';return} if(!m.approved){await sb.auth.signOut();$('loginMsg').textContent='아직 관리자 승인을 기다리는 중입니다.';return} member=m; $('who').textContent=(m.nickname||user.email)+'님 환영합니다.'; show('appView'); $('writeArea').classList.remove('hidden'); $('adminButton').classList.toggle('hidden',!m.is_admin); $('adminBtn').classList.toggle('hidden',!m.is_admin); await loadPosts(); await loadSiteData(); await loadNotifications(); }
+async function enterWithUser(user){ const {data:m,error}=await sb.from('members').select('*').eq('id',user.id).maybeSingle(); if(error){$('loginMsg').textContent='회원정보 확인 오류: '+error.message;return} if(!m){await sb.auth.signOut();$('loginMsg').textContent='가입 신청 정보가 없습니다.';return} if(!m.approved){await sb.auth.signOut();$('loginMsg').textContent='아직 관리자 승인을 기다리는 중입니다.';return} member=m; $('who').textContent=(m.nickname||user.email)+'님 환영합니다.'; show('appView'); $('writeArea').classList.remove('hidden'); $('adminButton').classList.toggle('hidden',!m.is_admin); $('adminBtn').classList.toggle('hidden',!m.is_admin); await loadPosts(); await loadSiteData(); await loadCategoryDescriptions(); await loadNotifications(); }
 async function logout(){await sb.auth.signOut();member=null;show('loginView')}
 function showRegister(){ $('modalBox').innerHTML=`<h2>가입 신청</h2><div class="small">닉네임과 비밀번호로 가입 신청하고 관리자 승인을 기다려주세요.</div><input id="regNick" placeholder="게임 닉네임"><input id="regPass" type="password" placeholder="비밀번호 (6자 이상)"><button class="btn" onclick="register()">가입 신청</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">닫기</button>`;$('modal').classList.remove('hidden')}
 async function register(){const nickname=$('regNick').value.trim(),password=$('regPass').value;if(!nickname||password.length<6)return alert('닉네임과 6자 이상 비밀번호를 입력해주세요.');if(nickname.length>30)return alert('닉네임은 30자 이하로 입력해주세요.');const email=nickEmail(nickname);const {data,error}=await sb.auth.signUp({email,password,options:{data:{nickname}}});if(error){if(String(error.message).toLowerCase().includes('already')||String(error.message).toLowerCase().includes('registered'))return alert('이미 사용 중인 닉네임입니다.');return alert('가입 실패: '+error.message)}closeModal();alert('가입 신청 완료! 관리자 승인을 기다려주세요.');await sb.auth.signOut()}
@@ -204,6 +204,39 @@ function normalizeGuideTitle(title){
    .toLocaleLowerCase('ko-KR')
    .normalize('NFKC')
    .replace(/[\s\p{P}\p{S}]+/gu,'');
+}
+const categoryDescriptionsDefault='승인된 길드원은 누구나 공략을 작성할 수 있습니다.';
+let categoryDescriptions={};
+async function loadCategoryDescriptions(){
+ const {data,error}=await sb.from('guild_category_descriptions').select('category,content');
+ if(error){console.warn('카테고리 안내문 로드 실패:',error.message);return;}
+ categoryDescriptions=Object.fromEntries((data||[]).map(r=>[r.category,r.content]));
+ renderPosts();
+}
+function editCategoryDescription(){
+ if(!member?.is_admin||category==='홈')return;
+ const current=categoryDescriptions[category]??categoryDescriptionsDefault;
+ $('modalBox').innerHTML=`<h2>✏️ ${esc(category)} 안내 문구 수정</h2><textarea id="categoryDescInput" maxlength="1000" style="min-height:130px">${esc(current)}</textarea><button class="btn" onclick="saveCategoryDescription()">저장</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">취소</button>`;
+ $('modal').classList.remove('hidden');
+}
+async function saveCategoryDescription(){
+ if(!member?.is_admin||category==='홈')return;
+ const content=$('categoryDescInput').value.trim();
+ const {error}=await sb.from('guild_category_descriptions').upsert({category,content},{onConflict:'category'});
+ if(error)return alert('안내 문구 저장 오류: '+error.message+'\nSQL 설정을 먼저 완료했는지 확인해주세요.');
+ categoryDescriptions[category]=content;
+ closeModal();renderPosts();
+}
+function updateCategoryDescription(){
+ const box=$('categoryDescText');if(!box)return;
+ const message=category==='홈'?categoryDescriptionsDefault:(categoryDescriptions[category]??categoryDescriptionsDefault);
+ box.textContent=message;
+ const btn=$('editCategoryDescBtn');if(btn)btn.classList.toggle('hidden',category==='홈'||!member?.is_admin);
+}
+function deckGroupKey(title){
+ // 공백/쉼표로 구분된 캐릭터 이름의 순서만 무시한다. 붙여 쓴 이름은 분리하지 않는다.
+ const names=String(title||'').normalize('NFKC').toLocaleLowerCase('ko-KR').split(/[\s,，、]+/u).filter(Boolean);
+ return JSON.stringify(names.sort((a,b)=>a.localeCompare(b,'ko')));
 }
 const expandedGuideGroups=new Set();
 function toggleGuideGroup(key){
@@ -222,6 +255,7 @@ function renderPostCard(p){
  return `<div class="post"><span class="badge">${esc(p.category||p.cat||'공략')}</span><span class="status-badge ${st.cls}">${st.label}</span><div class="title">${esc(p.title)}</div><div class="post-author">✍️ 작성자 · ${esc(p.author_nickname||'알 수 없음')}</div><div class="small">${new Date(p.created_at||Date.now()).toLocaleDateString('ko-KR')}</div><div class="post-body">${esc(p.content??p.body??'')}</div>${imgs.length?`<div class="image-grid">${imgs.map(u=>`<img src="${esc(u)}" loading="lazy">`).join('')}</div>`:''}<div class="post-actions">${canEdit?`<button class="iconbtn" onclick='editById(${JSON.stringify(String(p.id))})'>수정</button><button class="iconbtn" onclick='deletePost(${JSON.stringify(String(p.id))})'>삭제</button>`:''}<button type="button" class="iconbtn" onclick='event.stopPropagation();openComments(${JSON.stringify(String(p.id))})'>💬 댓글 ${commentCounts[String(p.id)]||0}</button><button type="button" class="iconbtn" onclick='event.stopPropagation();addSameTitleById(${JSON.stringify(String(p.id))})'>➕ 추가</button></div></div>`;
 }
 function renderPosts(){
+ updateCategoryDescription();
  if(category==='홈'){
    $('welcome').textContent='불사 길드';
    renderHome();
@@ -237,7 +271,7 @@ function renderPosts(){
  $('welcome').textContent=category==='전체'?'불사 공략실':category+' 공략';
  if(!a.length){$('postList').innerHTML=`<div class="card"><div class="small">${q?'검색 결과가 없습니다.':'등록된 공략이 없습니다.'}</div></div>`;return;}
  const groups=new Map();
- a.forEach(p=>{const key=normalizeGuideTitle(p.title);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p)});
+ a.forEach(p=>{const key=deckGroupKey(p.title);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p)});
  $('postList').innerHTML=[...groups.entries()].map(([key,group])=>{
    const first=group[0], open=expandedGuideGroups.has(key);
    const authors=[...new Set(group.map(p=>p.author_nickname||'알 수 없음'))];
