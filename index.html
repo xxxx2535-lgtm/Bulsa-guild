@@ -345,7 +345,7 @@ body{background:#080a0e;color:#f7f8fb;line-height:1.52}
   </div>
 </div>
 <div class="app-columns"><main class="app-main"><div class="searchbox"><span class="searchicon">🔎</span><input id="searchInput" placeholder="제목 검색 (단어 일부만 입력해도 됩니다)" oninput="renderPosts()"></div><div class="tabs"><button class="tab active" onclick="setCategory('홈',this)">🏠 홈</button><button class="tab" onclick="setCategory('전체',this)">전체</button><button class="tab" onclick="setCategory('길드전',this)">⚔️ 길드전</button><button class="tab" onclick="setCategory('공성전',this)">🏰 공성전</button><button class="tab" onclick="setCategory('파괴신',this)">💀 파괴신</button></div><div class="card hero"><h2 id="welcome">불사 공략실</h2><div id="categoryDescText" class="small">승인된 길드원은 누구나 공략을 작성할 수 있습니다.</div><button id="editCategoryDescBtn" class="mini-btn hidden" style="margin-top:10px" onclick="editCategoryDescription()">✏️ 안내 문구 수정</button></div><div id="postList"></div><div id="writeArea"><button class="btn" onclick="openPostEditor(null,{category:category})">✍️ 공략 작성</button><div id="adminBtn" class="hidden" style="height:8px"></div><button id="adminButton" class="btn gold hidden" onclick="openAdmin()">🔐 관리자 페이지</button></div><div class="footer">불사 길드</div></main><aside class="desktop-sidebar" aria-label="공략 요약"><div class="side-panel"><h3>🔥 최근 공략</h3><div id="sideRecent" class="side-items"></div></div><div class="side-panel"><h3>🏆 공략 많은 덱</h3><div id="sidePopular" class="side-items"></div></div><div class="side-panel"><h3>💡 이용 안내</h3><p>길드전에서는 캐릭터 버튼을 여러 개 선택해 원하는 덱을 찾을 수 있어요.</p><p>공략 제목은 캐릭터 이름을 띄어 쓰고, 설명은 괄호 안에 적어 주세요. 괄호 안은 검색·캐릭터 필터에서 제외됩니다.</p></div></aside></div></section>
-<section id="adminView" class="hidden"><div class="topbar"><div><b>🔐 관리자 페이지</b><div class="small">가입 승인 · 추방 · 공략 관리</div></div><button class="iconbtn" onclick="backApp()">돌아가기</button></div><div class="card"><h2>가입 신청 / 길드원 관리 <span id="memberCount" style="color:#ffc83d"></span></h2><div id="members"></div></div><div class="card"><h2>📥 공략 일괄 등록</h2><p class="small">공개 시트에서 가져오거나 복사한 내용을 붙여넣고, 제목을 확인한 뒤 선택한 공략만 등록합니다. 자동 저장하지 않습니다.</p><button class="btn" onclick="openBulkImporter()">공략 가져오기 · 미리보기</button><div style="height:8px"></div><button class="btn secondary" onclick="rollbackBulkImport()">↩️ 마지막 일괄 등록 취소</button></div><div class="card"><h2>공략 관리</h2><div id="adminPosts"></div></div></section>
+<section id="adminView" class="hidden"><div class="topbar"><div><b>🔐 관리자 페이지</b><div class="small">가입 승인 · 추방 · 공략 관리</div></div><button class="iconbtn" onclick="backApp()">돌아가기</button></div><div class="card"><h2>가입 신청 / 길드원 관리 <span id="memberCount" style="color:#ffc83d"></span></h2><div id="members"></div></div><div class="card"><h2>📥 공략 일괄 등록</h2><p class="small">시트 재가져오기 시 신규만 추가하고, 연동된 공략의 수정 사항만 업데이트합니다. 변경 없는 공략은 중복 등록하지 않습니다. 실제 저장 전 확인합니다.</p><button class="btn" onclick="openBulkImporter()">공략 가져오기 · 미리보기</button><div style="height:8px"></div><button class="btn secondary" onclick="rollbackBulkImport()">↩️ 일괄 등록한 신규 공략 삭제 (이 브라우저 기록)</button></div><div class="card"><h2>공략 관리</h2><div id="adminPosts"></div></div></section>
 </div><div id="modal" class="modal hidden"><div class="modalbox" id="modalBox"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -746,6 +746,27 @@ async function saveNickname(targetId){
 const BULK_SHEET_ID='1tZNiwON5dbCt9JZyGZe2slTdR1z1l3-Tu9QgU4A3hHA';
 const BULK_TABS=['귀칼 파훼','아일린 파훼','하연 파훼','윤건파훼','선란파훼','동영파훼','여포파훼','아리스파훼','실베파훼','미스트파훼','녹스파훼'];
 let bulkDrafts=[];
+// Stable per-source identity is embedded in the imported guide's content, not in the title.
+// This avoids changing the database schema and preserves same-title, different-guide entries.
+function bulkIdentity(d){return JSON.stringify([d.source,bulkClean(d.opponent||''),d.sourceIndex??0]);}
+function bulkMarker(d){return '\n\n[불사시트연동:'+encodeURIComponent(bulkIdentity(d))+']';}
+function bulkReadMarker(content){const m=String(content||'').match(/\[불사시트연동:([^\]]+)\]/);if(!m)return null;try{return decodeURIComponent(m[1]);}catch(e){return null;}}
+function bulkStripMarker(content){return String(content||'').replace(/\s*\[불사시트연동:[^\]]+\]\s*$/,'').trim();}
+function bulkEqual(a,b){return String(a||'').replace(/\r\n/g,'\n').trim()===String(b||'').replace(/\r\n/g,'\n').trim();}
+function bulkClassification(d,rows){
+ const marker=bulkIdentity(d);
+ const linked=rows.find(p=>bulkReadMarker(p.content??p.body)===marker);
+ if(linked){
+  const same=bulkEqual(linked.title,d.title)&&bulkEqual(linked.formation,d.formation)&&bulkEqual(bulkStripMarker(linked.content??linked.body),d.content);
+  return {kind:same?'unchanged':'changed',existing:linked};
+ }
+ // Earlier importer versions have no marker: exact content is safe to recognize.
+ const legacy=rows.find(p=>!bulkReadMarker(p.content??p.body)&&bulkEqual(p.title,d.title)&&bulkEqual(p.formation,d.formation)&&bulkEqual(p.content??p.body,d.content));
+ if(legacy)return {kind:'legacy',existing:legacy};
+ return {kind:'new',existing:null};
+}
+function bulkReclassify(){const rows=posts.filter(p=>(p.category||p.cat)==='길드전');bulkDrafts.forEach(d=>{d.sync=bulkClassification(d,rows);d.selected=d.sync.kind==='new'||d.sync.kind==='changed';});}
+
 function bulkClean(s){return String(s??'').trim();}
 function bulkPlainTitle(s){return searchableDeckTitle(s).replace(/[\/•·]+/g,' ').replace(/\s+/g,' ').trim();}
 function bulkNormalizeOpponent(raw,tab){
@@ -771,7 +792,7 @@ function bulkParse(lines,tab){
  const commit=()=>{if(!current)return; if(variant)current.variants.push(variant);variant=null;
   if(current.variants.length){const body=['원본 시트: '+tab,'상대: '+current.opponent,'',...current.variants.flatMap((v,i)=>['[추천 조합 '+(i+1)+']',...v.lines,''])].join('\n').trim();
    const f=current.variants.map(v=>v.formation).filter(Boolean);
-   out.push({title:current.title,formation:[...new Set(f)].join(' / '),content:body,source:tab,review:current.review||current.variants.some(v=>v.review),selected:true,status:'테스트중'});
+   out.push({title:current.title,formation:[...new Set(f)].join(' / '),content:body,source:tab,opponent:current.opponent,sourceIndex:out.filter(x=>x.opponent===current.opponent).length,review:current.review||current.variants.some(v=>v.review),selected:true,status:'테스트중'});
   }current=null;};
  for(const raw of lines){let line=bulkClean(raw);if(!line)continue;
   if(/^■\s*상대\s*[:：]/.test(line)){
@@ -812,33 +833,55 @@ async function bulkFetchAll(){if(!member?.is_admin)return;bulkDrafts=[];
   try{const rows=await bulkReadPublicSheet(tab);bulkDrafts.push(...bulkParse(bulkRowsToLines(rows),tab));}
   catch(e){failures.push(`${tab}: ${e.message}`);}
  }
- $('bulkStatus').textContent=`분석 ${bulkDrafts.length}건 / 실패 ${failures.length}개 시트`+(failures.length?' — '+failures.join(' | '):'');bulkRenderPreview();}
+ bulkReclassify();$('bulkStatus').textContent=`분석 ${bulkDrafts.length}건 / 실패 ${failures.length}개 시트`+(failures.length?' — '+failures.join(' | '):'');bulkRenderPreview();}
 function bulkParsePasted(){const t=$('bulkPaste').value.trim();if(!t)return alert('먼저 공략 내용을 붙여넣어 주세요.');
  const tab=$('bulkTab').value;const rows=t.split(/\r?\n/).flatMap(line=>line.split('\t')).filter(Boolean);
- const parsed=bulkParse(rows,tab);bulkDrafts.push(...parsed);$('bulkStatus').textContent=`추가 ${parsed.length}건, 전체 ${bulkDrafts.length}건`;bulkRenderPreview();}
-function bulkEdit(i,key,value){if(!bulkDrafts[i])return;bulkDrafts[i][key]=value;if(key==='title')bulkDrafts[i].review=false;}
+ const parsed=bulkParse(rows,tab);bulkDrafts.push(...parsed);bulkReclassify();$('bulkStatus').textContent=`추가 ${parsed.length}건, 전체 ${bulkDrafts.length}건`;bulkRenderPreview();}
+function bulkEdit(i,key,value){if(!bulkDrafts[i])return;bulkDrafts[i][key]=value;if(key==='title')bulkDrafts[i].review=false;bulkDrafts[i].sync=bulkClassification(bulkDrafts[i],posts.filter(p=>(p.category||p.cat)==='길드전'));}
 function bulkToggle(i,checked){if(bulkDrafts[i])bulkDrafts[i].selected=checked;bulkUpdateCount();}
-function bulkUpdateCount(){const el=$('bulkCount');if(el)el.textContent=`총 ${bulkDrafts.length}건 · 선택 ${bulkDrafts.filter(d=>d.selected).length}건`;}
+function bulkUpdateCount(){const el=$('bulkCount');if(el)el.textContent=`총 ${bulkDrafts.length}건 · 신규 ${bulkDrafts.filter(d=>d.sync?.kind==='new').length} · 수정 ${bulkDrafts.filter(d=>d.sync?.kind==='changed').length} · 변경 없음 ${bulkDrafts.filter(d=>['unchanged','legacy'].includes(d.sync?.kind)).length} · 선택 ${bulkDrafts.filter(d=>d.selected).length}건`;}
 function bulkRenderPreview(){const box=$('bulkPreview');if(!box)return;
  if(!bulkDrafts.length){box.innerHTML='<div class="notice">분석된 공략이 없습니다. 구글 접근 제한이면 직접 붙여넣기를 이용해 주세요.</div>';return;}
- box.innerHTML=`<h3>📋 등록 전 미리보기</h3><p id="bulkCount" class="small"></p><p class="small">⚠️ 제목은 자동 추정입니다. 조건부·복수 선택 공략은 반드시 검토하세요. 기본 상태는 '테스트중'입니다.</p><button class="mini-btn" onclick="bulkSelectAll(false)">전체 해제</button> <button class="mini-btn" onclick="bulkSelectAll(true)">전체 선택</button><div id="bulkItems"></div><button id="bulkSaveButton" class="btn" onclick="bulkSave()">선택한 공략 등록</button>`;
+ box.innerHTML=`<h3>📋 등록 전 미리보기</h3><p id="bulkCount" class="small"></p><p class="small">⚠️ 신규/수정만 기본 선택됩니다. 이전 버전으로 등록한 동일 내용은 변경 없음으로 인식합니다. 이전 버전에서 이미 등록한 뒤 원본이 수정된 공략은 자동 연결이 불가능할 수 있으니 첫 동기화 때 확인하세요. 조건부 제목은 검토하세요.</p><button class="mini-btn" onclick="bulkSelectAll(false)">전체 해제</button> <button class="mini-btn" onclick="bulkSelectAll(true)">전체 선택</button><div id="bulkItems"></div><button id="bulkSaveButton" class="btn" onclick="bulkSave()">선택한 공략 등록</button>`;
  $('bulkItems').innerHTML=bulkDrafts.map((d,i)=>{
- const sameTitleCount=posts.filter(p=>(p.category||p.cat)==='길드전'&&normalizeGuideTitle(p.title)===normalizeGuideTitle(d.title)).length;
- return `<div class="post" style="margin:12px 0"><label style="display:flex;gap:9px;align-items:center"><input type="checkbox" style="width:auto;margin:0" ${d.selected?'checked':''} onchange="bulkToggle(${i},this.checked)"><strong>${i+1}. ${esc(d.source)}</strong></label><div class="small" style="color:${sameTitleCount?'#ffb06a':d.review?'#ffd48b':'#9fd4aa'}">${sameTitleCount?'ℹ️ 같은 제목 '+sameTitleCount+'건 존재 · 추가 등록 가능':d.review?'⚠️ 제목/조건 검토 필요':'제목 확인 권장'}</div><label class="small">등록 제목 (괄호 안은 검색 제외)</label><input value="${esc(d.title)}" oninput="bulkEdit(${i},'title',this.value)"><label class="small">진형</label><input value="${esc(d.formation)}" oninput="bulkEdit(${i},'formation',this.value)"><label class="small">공략 내용 (원문 대조)</label><textarea style="min-height:170px" oninput="bulkEdit(${i},'content',this.value)">${esc(d.content)}</textarea></div>`}).join('');bulkUpdateCount();}
-function bulkSelectAll(value){bulkDrafts.forEach(d=>d.selected=value);bulkRenderPreview();}
-async function bulkSave(){if(!member?.is_admin)return;const selected=bulkDrafts.filter(d=>d.selected&&d.title.trim()&&d.content.trim());
- if(!selected.length)return alert('등록할 공략을 선택해 주세요.');
- if(!confirm(`${selected.length}개 공략을 실제 사이트에 등록할까요?\n기존 공략은 수정하지 않습니다.`))return;
- const btn=$('bulkSaveButton');btn.disabled=true;let inserted=[],failed=[];
- for(const d of selected){
- const payload={category:'길드전',title:d.title.trim(),formation:d.formation.trim(),content:d.content.trim(),status:'테스트중',author_id:member.id,updated_at:new Date().toISOString(),image_url:null};
- const {data,error}=await sb.from('guides').insert(payload).select('id').single();
- if(error){failed.push(d.title+' ('+error.message+')');continue;}
- inserted.push(data.id);
+ const sameTitleCount=posts.filter(p=>(p.category||p.cat)==='길드전'&&normalizeGuideTitle(p.title)===normalizeGuideTitle(d.title)).length;const sync=d.sync||{kind:'new'};const syncLabel={new:'🆕 신규 등록',changed:'✏️ 원본 수정됨 · 기존 연동 공략 업데이트',unchanged:'✓ 변경 없음 · 등록 제외',legacy:'✓ 동일 공략 기존 등록됨 · 등록 제외'}[sync.kind];
+ return `<div class="post" style="margin:12px 0"><label style="display:flex;gap:9px;align-items:center"><input type="checkbox" style="width:auto;margin:0" ${d.selected?'checked':''} onchange="bulkToggle(${i},this.checked)"><strong>${i+1}. ${esc(d.source)}</strong></label><div class="small" style="color:${sameTitleCount?'#ffb06a':d.review?'#ffd48b':'#9fd4aa'}">${syncLabel}${sameTitleCount?' · 동일 제목 '+sameTitleCount+'건':''}${d.review?' · 제목 검토 필요':''}</div><label class="small">등록 제목 (괄호 안은 검색 제외)</label><input value="${esc(d.title)}" oninput="bulkEdit(${i},'title',this.value)"><label class="small">진형</label><input value="${esc(d.formation)}" oninput="bulkEdit(${i},'formation',this.value)"><label class="small">공략 내용 (원문 대조)</label><textarea style="min-height:170px" oninput="bulkEdit(${i},'content',this.value)">${esc(d.content)}</textarea></div>`}).join('');bulkUpdateCount();}
+function bulkSelectAll(value){bulkDrafts.forEach(d=>d.selected=value&&!['unchanged','legacy'].includes(d.sync?.kind));bulkRenderPreview();}
+async function bulkSave(){
+ if(!member?.is_admin)return;
+ // Recheck the database immediately before saving to protect against repeat imports.
+ const {data:fresh,error:fetchError}=await sb.from('guides').select('*').eq('category','길드전');
+ if(fetchError)return alert('중복 확인을 위해 기존 공략을 불러오지 못했습니다: '+fetchError.message);
+ const selected=bulkDrafts.filter(d=>d.selected&&d.title.trim()&&d.content.trim());
+ const planned=selected.map(d=>({d,sync:bulkClassification(d,fresh||[])})).filter(x=>!['unchanged','legacy'].includes(x.sync.kind));
+ if(!planned.length)return alert('신규 또는 변경된 공략이 없습니다. 동일한 공략은 다시 등록되지 않습니다.');
+ const adds=planned.filter(x=>x.sync.kind==='new').length,updates=planned.length-adds;
+ if(!confirm(`신규 ${adds}건 등록 / 기존 연동 공략 ${updates}건 수정할까요?\n변경 없는 공략은 자동으로 건너뜁니다.\n기존 수동 작성 공략은 수정하지 않습니다.`))return;
+ const btn=$('bulkSaveButton');btn.disabled=true;
+ let inserted=[],updated=0,failed=[];
+ for(const {d,sync} of planned){
+  const content=d.content.trim()+bulkMarker(d);
+  const payload={category:'길드전',title:d.title.trim(),formation:d.formation.trim(),content,status:'테스트중',updated_at:new Date().toISOString()};
+  let result;
+  if(sync.kind==='changed'){
+   // Update only records with a verified import marker, never manually written guides.
+   if(bulkReadMarker(sync.existing.content??sync.existing.body)!==bulkIdentity(d))continue;
+   result=await sb.from('guides').update(payload).eq('id',sync.existing.id).select('id').single();
+   if(!result.error)updated++;
+  }else{
+   result=await sb.from('guides').insert({...payload,author_id:member.id,image_url:null}).select('id').single();
+   if(!result.error)inserted.push(result.data.id);
+  }
+  if(result.error)failed.push(d.title+' ('+result.error.message+')');
  }
- if(inserted.length){localStorage.setItem('bulsaLastBulk_'+member.id,JSON.stringify(inserted));}
- await loadPosts();btn.disabled=false;alert(`등록 완료 ${inserted.length}건 / 제외·실패 ${failed.length}건`+(failed.length?'\n'+failed.slice(0,8).join('\n'):''));
- if(inserted.length){closeModal();await renderAdmin();}
+ if(inserted.length){
+  const key='bulsaLastBulk_'+member.id;
+  let previous=[];try{previous=JSON.parse(localStorage.getItem(key)||'[]')}catch(e){}
+  localStorage.setItem(key,JSON.stringify([...new Set([...previous,...inserted])]));
+ }
+ await loadPosts();btn.disabled=false;
+ alert(`신규 등록 ${inserted.length}건 / 업데이트 ${updated}건 / 제외·실패 ${failed.length}건`+(failed.length?'\n'+failed.slice(0,8).join('\n'):''));
+ if(inserted.length||updated){closeModal();await renderAdmin();}
 }
 async function rollbackBulkImport(){if(!member?.is_admin)return;const key='bulsaLastBulk_'+member.id;
  let ids=[];try{ids=JSON.parse(localStorage.getItem(key)||'[]')}catch(e){}
