@@ -72,6 +72,12 @@
 .notification-title{font-weight:900;margin-bottom:5px}
 .notification-meta{font-size:12px;color:#aaa}
 @media(max-width:430px){.notify-bell{left:10px!important;width:42px!important;height:42px!important;font-size:22px!important}}
+
+/* v23 text-only deck tags and automatic character filters */
+.character-filter{margin:10px 0 14px;padding:13px;background:#181414;border:1px solid #5c3029;border-radius:15px}
+.filter-heading{font-weight:900;color:#ffd28b;margin-bottom:5px}.filter-hint{font-size:12px;color:#aaa;margin-bottom:10px}
+.filter-chips,.deck-tags{display:flex;flex-wrap:wrap;gap:7px}.filter-chip{border:1px solid #62504a;background:#302523;color:#e8d6cc;border-radius:9px;padding:7px 11px;font-size:13px;font-weight:800;cursor:pointer}.filter-chip.selected{background:#bd2821;color:white;border-color:#ff725b}.deck-chip{display:inline-block;border-radius:7px;background:#362b2a;border:1px solid #59423c;padding:4px 8px;font-size:12px;color:#f3ddd0}.deck-chip.selected{background:#8c2924;border-color:#e85a4e;color:#fff}
+.deck-card{background:linear-gradient(120deg,#261b19,#181717);border:1px solid #65403a;border-radius:13px;padding:13px;margin:9px 0;cursor:pointer}.deck-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.deck-name{font-size:17px;font-weight:950;line-height:1.5}.deck-count{background:#9c251c;color:white;border-radius:9px;padding:5px 9px;white-space:nowrap;font-size:12px;font-weight:900}.deck-meta{font-size:12px;color:#c9aaa0;margin-top:8px;line-height:1.5}.deck-expand{font-size:12px;color:#ffa96d;margin-top:9px;font-weight:800}
 </style>
 <link rel="icon" type="image/png" sizes="512x512" href="./icon.png?v=2">
 <link rel="apple-touch-icon" sizes="512x512" href="./icon.png?v=2">
@@ -198,7 +204,7 @@ async function logout(){await sb.auth.signOut();member=null;show('loginView')}
 function showRegister(){ $('modalBox').innerHTML=`<h2>가입 신청</h2><div class="small">닉네임과 비밀번호로 가입 신청하고 관리자 승인을 기다려주세요.</div><input id="regNick" placeholder="게임 닉네임"><input id="regPass" type="password" placeholder="비밀번호 (6자 이상)"><button class="btn" onclick="register()">가입 신청</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">닫기</button>`;$('modal').classList.remove('hidden')}
 async function register(){const nickname=$('regNick').value.trim(),password=$('regPass').value;if(!nickname||password.length<6)return alert('닉네임과 6자 이상 비밀번호를 입력해주세요.');if(nickname.length>30)return alert('닉네임은 30자 이하로 입력해주세요.');const email=nickEmail(nickname);const {data,error}=await sb.auth.signUp({email,password,options:{data:{nickname}}});if(error){if(String(error.message).toLowerCase().includes('already')||String(error.message).toLowerCase().includes('registered'))return alert('이미 사용 중인 닉네임입니다.');return alert('가입 실패: '+error.message)}closeModal();alert('가입 신청 완료! 관리자 승인을 기다려주세요.');await sb.auth.signOut()}
 async function loadPosts(){const [{data,error},{data:memberRows},{data:commentRows}]=await Promise.all([sb.from('guides').select('*').order('created_at',{ascending:false}),sb.from('members').select('id,nickname'),sb.from('guide_comments').select('guide_id')]);if(error){$('postList').innerHTML=`<div class="card"><div class="small">공략 불러오기 오류: ${esc(error.message)}</div></div>`;return}const nicknameById=Object.fromEntries((memberRows||[]).map(m=>[String(m.id),m.nickname]));commentCounts={};(commentRows||[]).forEach(c=>commentCounts[String(c.guide_id)]=(commentCounts[String(c.guide_id)]||0)+1);posts=(data||[]).map(p=>({...p,author_nickname:nicknameById[String(p.author_id)]||'알 수 없음'}));renderPosts()}
-function setCategory(c,el){category=c;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderPosts()}
+function setCategory(c,el){selectedCharacters.clear();category=c;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderPosts()}
 function normalizeGuideTitle(title){
  return String(title||'')
    .toLocaleLowerCase('ko-KR')
@@ -207,6 +213,7 @@ function normalizeGuideTitle(title){
 }
 const categoryDescriptionsDefault='승인된 길드원은 누구나 공략을 작성할 수 있습니다.';
 let categoryDescriptions={};
+const selectedCharacters=new Set();
 async function loadCategoryDescriptions(){
  const {data,error}=await sb.from('guild_category_descriptions').select('category,content');
  if(error){console.warn('카테고리 안내문 로드 실패:',error.message);return;}
@@ -254,28 +261,37 @@ function renderPostCard(p){
  const imgs=getImages(p),st=statusInfo(p.status);
  return `<div class="post"><span class="badge">${esc(p.category||p.cat||'공략')}</span><span class="status-badge ${st.cls}">${st.label}</span><div class="title">${esc(p.title)}</div><div class="post-author">✍️ 작성자 · ${esc(p.author_nickname||'알 수 없음')}</div><div class="small">${new Date(p.created_at||Date.now()).toLocaleDateString('ko-KR')}</div><div class="post-body">${esc(p.content??p.body??'')}</div>${imgs.length?`<div class="image-grid">${imgs.map(u=>`<img src="${esc(u)}" loading="lazy">`).join('')}</div>`:''}<div class="post-actions">${canEdit?`<button class="iconbtn" onclick='editById(${JSON.stringify(String(p.id))})'>수정</button><button class="iconbtn" onclick='deletePost(${JSON.stringify(String(p.id))})'>삭제</button>`:''}<button type="button" class="iconbtn" onclick='event.stopPropagation();openComments(${JSON.stringify(String(p.id))})'>💬 댓글 ${commentCounts[String(p.id)]||0}</button><button type="button" class="iconbtn" onclick='event.stopPropagation();addSameTitleById(${JSON.stringify(String(p.id))})'>➕ 추가</button></div></div>`;
 }
+function deckTokens(title){
+ // Titles are character names separated by whitespace or commas; concatenated names stay one token.
+ return [...new Set(String(title||'').normalize('NFKC').split(/[\s,，、]+/u).map(x=>x.trim()).filter(Boolean))];
+}
+function toggleCharacter(name){
+ if(selectedCharacters.has(name))selectedCharacters.delete(name);else selectedCharacters.add(name);
+ renderPosts();
+}
+function clearCharacters(){selectedCharacters.clear();renderPosts();}
 function renderPosts(){
  updateCategoryDescription();
- if(category==='홈'){
-   $('welcome').textContent='불사 길드';
-   renderHome();
-   return;
- }
+ if(category==='홈'){$('welcome').textContent='불사 길드';renderHome();return;}
  const q=($('searchInput')?.value||'').trim().toLocaleLowerCase('ko-KR');
  const terms=q.split(/\s+/).map(normalizeGuideTitle).filter(Boolean);
- const a=posts.filter(p=>{
-   const catOk=category==='전체'||(p.category||p.cat)===category;
-   const titleNorm=normalizeGuideTitle(p.title);
-   return catOk && (!terms.length || terms.every(term=>titleNorm.includes(term)));
+ const categoryPosts=posts.filter(p=>category==='전체'||(p.category||p.cat)===category);
+ const allCharacters=[...new Map(categoryPosts.flatMap(p=>deckTokens(p.title)).map(x=>[x.toLocaleLowerCase('ko-KR'),x])).values()].sort((a,b)=>a.localeCompare(b,'ko'));
+ // Drop selections no longer present in this category.
+ for(const name of selectedCharacters){if(!allCharacters.some(x=>x.toLocaleLowerCase('ko-KR')===name.toLocaleLowerCase('ko-KR')))selectedCharacters.delete(name);}
+ const a=categoryPosts.filter(p=>{
+   const tokens=deckTokens(p.title).map(x=>x.toLocaleLowerCase('ko-KR'));
+   return [...selectedCharacters].every(x=>tokens.includes(x.toLocaleLowerCase('ko-KR'))) && (!terms.length||terms.every(term=>normalizeGuideTitle(p.title).includes(term)));
  });
  $('welcome').textContent=category==='전체'?'불사 공략실':category+' 공략';
- if(!a.length){$('postList').innerHTML=`<div class="card"><div class="small">${q?'검색 결과가 없습니다.':'등록된 공략이 없습니다.'}</div></div>`;return;}
+ const chips=`<div class="character-filter"><div class="filter-heading">🔎 캐릭터별 공략 찾기</div><div class="filter-hint">여러 명을 선택하면 모두 포함된 덱만 나옵니다. · 제목에서 자동 생성</div><div class="filter-chips"><button class="filter-chip ${selectedCharacters.size===0?'selected':''}" onclick="clearCharacters()">전체</button>${allCharacters.map(n=>`<button class="filter-chip ${selectedCharacters.has(n)?'selected':''}" onclick='toggleCharacter(${JSON.stringify(n)})'>${esc(n)}</button>`).join('')}</div></div>`;
+ if(!a.length){$('postList').innerHTML=chips+`<div class="card"><div class="small">${q||selectedCharacters.size?'조건에 맞는 공략이 없습니다.':'등록된 공략이 없습니다.'}</div></div>`;return;}
  const groups=new Map();
  a.forEach(p=>{const key=deckGroupKey(p.title);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p)});
- $('postList').innerHTML=[...groups.entries()].map(([key,group])=>{
-   const first=group[0], open=expandedGuideGroups.has(key);
-   const authors=[...new Set(group.map(p=>p.author_nickname||'알 수 없음'))];
-   return `<div class="post" style="cursor:pointer" onclick='toggleGuideGroup(${JSON.stringify(key)})'><span class="badge">${esc(first.category||first.cat||'공략')}</span><div class="title">${esc(first.title)}</div><div class="post-author">✍️ ${group.length>1?`공략 ${group.length}개 · `:''}작성자 ${esc(authors.join(' · '))}</div><div class="small" style="margin-top:7px">${open?'▲ 눌러서 접기':'▼ 눌러서 공략 보기'}</div></div>${open?`<div style="padding-left:10px;border-left:2px solid #76200f">${group.map(renderPostCard).join('')}</div>`:''}`;
+ $('postList').innerHTML=chips+`<div class="small" style="margin:0 0 10px">📚 ${groups.size}개 덱 · 공략 ${a.length}개</div>`+[...groups.entries()].map(([key,group])=>{
+   const first=group[0],open=expandedGuideGroups.has(key),authors=[...new Set(group.map(p=>p.author_nickname||'알 수 없음'))];
+   const tokens=deckTokens(first.title);
+   return `<div class="deck-card" onclick='toggleGuideGroup(${JSON.stringify(key)})'><div class="deck-head"><div class="deck-name">${esc(tokens.join(' · '))}</div><span class="deck-count">공략 ${group.length}개</span></div><div class="deck-tags" style="margin-top:9px">${tokens.map(n=>`<span class="deck-chip ${selectedCharacters.has(n)?'selected':''}">${esc(n)}</span>`).join('')}</div><div class="deck-meta">✍️ ${esc(authors.join(' · '))}</div><div class="deck-expand">${open?'▲ 공략 접기':'▼ 공략 펼쳐보기'}</div></div>${open?`<div style="padding-left:9px;border-left:2px solid #76200f">${group.map(renderPostCard).join('')}</div>`:''}`;
  }).join('');
 }
 
