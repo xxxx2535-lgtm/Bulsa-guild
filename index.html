@@ -440,6 +440,36 @@ body{background:#080a0e;color:#f7f8fb;line-height:1.52}
 /* 안내 문구: 저장된 엔터와 빈 줄을 그대로 표시 */
 #categoryDescText { white-space: pre-wrap; overflow-wrap: anywhere; }
 </style>
+<style>
+
+/* BULSA GUILD HALL — premium charcoal and ember, home screen only */
+#appView .guild-lobby{margin:2px 0 16px;position:relative}
+#appView .lobby-intro{padding:22px 19px 20px;border-radius:19px;background:radial-gradient(ellipse at 90% 0%,rgba(184,63,41,.16),transparent 60%),linear-gradient(140deg,#1c222b,#10151c 78%);border:1px solid #46505b;box-shadow:inset 0 1px rgba(255,255,255,.07),0 12px 30px #0005;overflow:hidden;position:relative}
+#appView .lobby-intro:after{content:'✦';position:absolute;right:18px;top:2px;font-size:88px;color:#c69c6330;pointer-events:none}
+#appView .lobby-eyebrow{font-size:10px;letter-spacing:2.6px;color:#e0b985;font-weight:900;margin-bottom:8px}
+#appView .lobby-greeting{font-size:12px;color:#aab4c1;margin-bottom:2px}
+#appView .lobby-title{font-size:clamp(25px,6vw,33px);font-weight:950;letter-spacing:-1.2px;line-height:1.3;color:#f8f5f0;position:relative;z-index:1}
+#appView .lobby-title em{font-style:normal;color:#ffb99c;text-shadow:0 0 20px #e5443830}
+#appView .lobby-sub{font-size:12px;color:#aeb9c6;margin-top:9px;position:relative;z-index:1}
+#appView .lobby-divider{height:1px;background:linear-gradient(90deg,#ba8a56,rgba(186,138,86,.1));margin:17px 0 15px}
+#appView .lobby-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+#appView .lobby-shortcut{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:103px;padding:13px 5px;background:linear-gradient(150deg,#232a34,#151a22);border:1px solid #414c58;border-radius:15px;color:#f5f6f8;cursor:pointer;transition:transform .15s,border-color .15s}
+#appView .lobby-shortcut:active{transform:scale(.97);border-color:#e8ae6b}
+#appView .lobby-shortcut .lobby-symbol{font-size:29px;line-height:1}
+#appView .lobby-shortcut strong{font-size:13px;font-weight:900}
+#appView .lobby-shortcut small{font-size:10px;color:#9da9b8}
+#appView .lobby-shortcut.featured{background:linear-gradient(150deg,#492326,#241b23);border-color:#a35750}
+#appView .lobby-section-label{display:flex;align-items:center;gap:9px;margin:17px 2px 10px;color:#f0d1a4;font-size:12px;letter-spacing:.7px;font-weight:850}
+#appView .lobby-section-label:after{content:'';height:1px;flex:1;background:linear-gradient(90deg,#6e5947,transparent)}
+#appView .notice-home{border:1px solid #564e45!important;background:linear-gradient(145deg,#202126,#14181f)!important;box-shadow:inset 0 1px #ffffff0b!important}
+#appView .notice-home h2{font-size:17px;color:#f1d2a6!important}
+#appView .notice-home .post-body{font-size:13px;line-height:1.8}
+#appView .home-image{border:1px solid #3b454f;border-radius:16px}
+#appView .lobby-stamp{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;margin:0 0 10px;border:1px solid #37424e;border-radius:12px;background:#151c25;color:#b9c2ce;font-size:11px}
+#appView .lobby-stamp b{color:#e5bd83;font-size:10px;letter-spacing:1.2px}
+@media(min-width:600px){#appView .lobby-shortcuts{gap:12px}#appView .lobby-shortcut{min-height:118px}}
+
+</style>
 </head><body><div class="wrap">
 <section id="loginView" class="poster-login">
  <div class="poster-inner">
@@ -737,10 +767,11 @@ async function loadSiteData(){
  noticeRow=no||null;
  if(category==='홈')renderHome();
 }
+function lobbyGo(name){const btn=[...document.querySelectorAll('#appView .tabs .tab')].find(b=>b.textContent.includes(name));if(btn){setCategory(name,btn);window.scrollTo({top:0,behavior:'smooth'});}}
 function renderHome(){
  renderDesktopSidebar();
  const notice=noticeRow?.content||'등록된 공지가 없습니다.';
- $('postList').innerHTML=`<div class="card notice-home"><h2>📢 길드 공지</h2><div class="post-body">${esc(notice)}</div>${member?.is_admin?`<div style="height:10px"></div><button class="btn gold" onclick="editNotice()">공지 수정</button>`:''}</div><img class="home-image" src="./home.png?v=1" alt="불사 길드 홍보 이미지">`;
+ $('postList').innerHTML=`<section class="guild-lobby" aria-label="불사 길드 로비"><div class="lobby-intro"><div class="lobby-eyebrow">✦ BULSA · GUILD HALL</div><div class="lobby-greeting">어서 오세요,</div><div class="lobby-title"><em>${esc(member?.nickname||'길드원')}</em>님 ⚔️</div><div class="lobby-sub">승리를 위한 모든 전략, 불사 공략실에서.</div><div class="lobby-divider"></div><div class="lobby-shortcuts"><button type="button" class="lobby-shortcut featured" onclick="lobbyGo('길드전')"><span class="lobby-symbol">⚔️</span><strong>길드전</strong><small>상대 덱 파훼</small></button><button type="button" class="lobby-shortcut" onclick="lobbyGo('공성전')"><span class="lobby-symbol">🏰</span><strong>공성전</strong><small>공략 확인</small></button><button type="button" class="lobby-shortcut" onclick="lobbyGo('파괴신')"><span class="lobby-symbol">💀</span><strong>파괴신</strong><small>빌드 연구</small></button></div></div><div class="lobby-section-label">📯 GUILD NOTICE · 길드 공지</div></section><div class="card notice-home"><h2>📢 길드 공지</h2><div class="post-body">${esc(notice)}</div>${member?.is_admin?`<div style="height:10px"></div><button class="btn gold" onclick="editNotice()">공지 수정</button>`:''}</div><img class="home-image" src="./home.png?v=1" alt="불사 길드 홍보 이미지">`;
 }
 async function editNotice(){
  if(!member?.is_admin)return;
