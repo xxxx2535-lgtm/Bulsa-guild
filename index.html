@@ -784,19 +784,18 @@ function bulkClean(s){return String(s??'').trim();}
 function bulkPlainTitle(s){return searchableDeckTitle(s).replace(/[\/•·]+/g,' ').replace(/\s+/g,' ').trim();}
 function bulkNormalizeOpponent(raw,tab){
  let s=bulkClean(raw).replace(/^■\s*상대\s*[:：]\s*/,'').trim();
- // Keep conditions in parentheses, but do not hallucinate missing full names.
- const parenthetical=[...s.matchAll(/\(([^)]*)\)/g)].map(x=>x[1].trim());
- s=s.replace(/\([^)]*\)/g,'').trim();
+ const parenthetical=[...s.matchAll(/[（(]([^()（）]*)[）)]/g)].map(x=>x[1].trim());
+ s=s.replace(/[（(][^()（）]*[）)]/g,'').trim();
  const isConditional=/없는|제외|모든|이외|상관|포함|기타|덱|외\b/.test(s);
- const hasAlternatives=/[•·]|\s+또는\s+/.test(s);
- let title='';let review=false;
+ const hasAlternatives=/[•·] |\s+또는\s+/.test(s);
+ let title='',review=false;
  if(isConditional){
    const base=(s.match(/([가-힣A-Za-z0-9]+)덱/)||[])[1] || (tab.replace(/\s*파훼$/,'').replace(/덱$/,''));
    title=base+'('+s+(parenthetical.length?' / '+parenthetical.join(' / '):'')+')';review=true;
  }else{
-   // Only on sheet import: preserve an existing parenthetical as-is.
-   // When no parentheses exist, display characters after the first three as a note.
-   const names=s.replace(/[\/]+/g,' ').replace(/\s+/g,' ').trim().split(' ').filter(Boolean);
+   // Slash and middle dots can delimit the opponent names; preserve the remainder as a note.
+   // Parentheses already present in the source are not modified or doubled.
+   const names=s.split(/[\s/／,，•·]+/u).map(x=>x.trim()).filter(Boolean);
    if(parenthetical.length){
      title=names.join(' ')+'('+parenthetical.join(' / ')+')';
    }else if(names.length>3){
@@ -804,7 +803,7 @@ function bulkNormalizeOpponent(raw,tab){
    }else{
      title=names.join(' ');
    }
-   review=hasAlternatives || /\+|\?|~/.test(s);
+   review=/\+|\?|~|또는/.test(s);
  }
  return {title,review};
 }
