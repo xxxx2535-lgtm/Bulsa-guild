@@ -142,6 +142,11 @@
 #loginView .poster-error{color:#ffac91;text-align:center;font-size:2.5cqw;line-height:1.2}
 @media(min-width:700px){#loginView.poster-login{width:min(100vw,540px)!important;margin:0 auto!important}}
 
+
+/* Returning members see the poster and explicitly enter the guild hall. */
+#loginView #returningWelcome:not(.hidden){display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:22cqw;margin:1cqw 0 2cqw;padding:2cqw;border:1px solid #c89564;border-radius:2cqw;background:linear-gradient(#211519,#100c0e);color:#ffe2ad;font-size:3.3cqw;font-weight:850;text-shadow:0 0 10px #ff5134}
+#loginView #returningWelcome small{display:block;margin-top:1.5cqw;font-size:2.4cqw;font-weight:500;color:#d7c1b6}
+#loginView #loginFields.hidden,#loginView #registerButton.hidden,#loginView #switchAccountButton.hidden{display:none!important}
 </style>
 <link rel="icon" type="image/png" sizes="512x512" href="./icon.png?v=2">
 <link rel="apple-touch-icon" sizes="512x512" href="./icon.png?v=2">
@@ -441,10 +446,14 @@ body{background:#080a0e;color:#f7f8fb;line-height:1.52}
   <div class="poster-form">
    <h2>길드원 전용 입장</h2>
    <p>가입한 닉네임과 비밀번호를 입력하세요.</p>
+   <div id="returningWelcome" class="hidden" aria-live="polite"></div>
+   <div id="loginFields">
    <label class="poster-input"><span>♟</span><input id="loginEmail" placeholder="닉네임" autocomplete="username" autocapitalize="off"></label>
    <label class="poster-input"><span>♙</span><input id="loginPass" type="password" placeholder="비밀번호" autocomplete="current-password"><button type="button" class="poster-eye login-eye" onclick="toggleLoginPassword()" aria-label="비밀번호 보기">보기</button></label>
+   </div>
    <button class="poster-submit" onclick="login()">입장하기 ❯</button>
-   <button class="poster-register" onclick="showRegister()">♙ 처음 오셨나요? <strong>가입 신청 ❯</strong></button>
+   <button id="switchAccountButton" class="poster-register hidden" onclick="switchLoginAccount()">다른 계정으로 로그인 ❯</button>
+   <button id="registerButton" class="poster-register" onclick="showRegister()">♙ 처음 오셨나요? <strong>가입 신청 ❯</strong></button>
    <div class="poster-security">🔒 비밀번호는 이 화면이나 소스코드에 저장되지 않습니다.</div>
    <div id="loginMsg" role="status" class="poster-error"></div>
   </div>
@@ -480,9 +489,37 @@ const $=id=>document.getElementById(id); const esc=s=>String(s??'').replace(/[&<
 function show(id){['loginView','appView','adminView'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden')}
 function nickEmail(n){return encodeURIComponent(n.trim().toLowerCase())+'@bulsa-guild.local'}
 function toggleLoginPassword(){const x=document.getElementById('loginPass');const b=document.querySelector('.login-eye');if(!x)return;x.type=x.type==='password'?'text':'password';if(b)b.textContent=x.type==='password'?'보기':'숨김';}
-async function login(){ $('loginMsg').textContent='로그인 중...'; const nickname=$('loginEmail').value.trim(),password=$('loginPass').value; if(!nickname||!password){$('loginMsg').textContent='닉네임과 비밀번호를 입력해주세요.';return} const email=nickEmail(nickname); const {data,error}=await sb.auth.signInWithPassword({email,password}); if(error){$('loginMsg').textContent='로그인 실패: 닉네임 또는 비밀번호를 확인해주세요.';return} await enterWithUser(data.user); }
+let returningSessionUser=null;
+function showReturningLogin(user){
+ returningSessionUser=user;
+ const nickname=String(user?.user_metadata?.nickname||user?.email?.split('@')[0]||'길드원');
+ $('returningWelcome').innerHTML='🔥 '+esc(nickname)+'님, 환영합니다!<small>입장하기를 눌러 불사 공략실에 입장하세요.</small>';
+ $('returningWelcome').classList.remove('hidden');
+ $('loginFields').classList.add('hidden');
+ $('registerButton').classList.add('hidden');
+ $('switchAccountButton').classList.remove('hidden');
+ $('loginMsg').textContent='';
+ show('loginView');
+}
+function showNormalLogin(){
+ returningSessionUser=null;
+ $('returningWelcome').classList.add('hidden');
+ $('loginFields').classList.remove('hidden');
+ $('registerButton').classList.remove('hidden');
+ $('switchAccountButton').classList.add('hidden');
+ $('loginMsg').textContent='';
+}
+async function switchLoginAccount(){await sb.auth.signOut();showNormalLogin();show('loginView')}
+async function login(){
+ if(returningSessionUser){
+  $('loginMsg').textContent='입장 확인 중...';
+  const {data:{user},error}=await sb.auth.getUser();
+  if(error||!user){showNormalLogin();$('loginMsg').textContent='로그인이 만료되었습니다. 다시 로그인해주세요.';return}
+  await enterWithUser(user);return;
+ }
+ $('loginMsg').textContent='로그인 중...'; const nickname=$('loginEmail').value.trim(),password=$('loginPass').value; if(!nickname||!password){$('loginMsg').textContent='닉네임과 비밀번호를 입력해주세요.';return} const email=nickEmail(nickname); const {data,error}=await sb.auth.signInWithPassword({email,password}); if(error){$('loginMsg').textContent='로그인 실패: 닉네임 또는 비밀번호를 확인해주세요.';return} await enterWithUser(data.user); }
 async function enterWithUser(user){ const {data:m,error}=await sb.from('members').select('*').eq('id',user.id).maybeSingle(); if(error){$('loginMsg').textContent='회원정보 확인 오류: '+error.message;return} if(!m){await sb.auth.signOut();$('loginMsg').textContent='가입 신청 정보가 없습니다.';return} if(!m.approved){await sb.auth.signOut();$('loginMsg').textContent='아직 관리자 승인을 기다리는 중입니다.';return} member=m; $('who').textContent=(m.nickname||user.email)+'님 환영합니다.'; show('appView'); $('writeArea').classList.remove('hidden'); $('adminButton').classList.toggle('hidden',!m.is_admin); $('adminBtn').classList.toggle('hidden',!m.is_admin); await loadPosts(); await loadSiteData(); await loadCategoryDescriptions(); await loadNotifications(); }
-async function logout(){await sb.auth.signOut();member=null;show('loginView')}
+async function logout(){await sb.auth.signOut();member=null;showNormalLogin();show('loginView')}
 function showRegister(){ $('modalBox').innerHTML=`<h2>가입 신청</h2><div class="small">닉네임과 비밀번호로 가입 신청하고 관리자 승인을 기다려주세요.</div><input id="regNick" placeholder="게임 닉네임"><input id="regPass" type="password" placeholder="비밀번호 (6자 이상)"><button class="btn" onclick="register()">가입 신청</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">닫기</button>`;$('modal').classList.remove('hidden')}
 async function register(){const nickname=$('regNick').value.trim(),password=$('regPass').value;if(!nickname||password.length<6)return alert('닉네임과 6자 이상 비밀번호를 입력해주세요.');if(nickname.length>30)return alert('닉네임은 30자 이하로 입력해주세요.');const email=nickEmail(nickname);const {data,error}=await sb.auth.signUp({email,password,options:{data:{nickname}}});if(error){if(String(error.message).toLowerCase().includes('already')||String(error.message).toLowerCase().includes('registered'))return alert('이미 사용 중인 닉네임입니다.');return alert('가입 실패: '+error.message)}closeModal();alert('가입 신청 완료! 관리자 승인을 기다려주세요.');await sb.auth.signOut()}
 async function loadPosts(){if($('postList'))$('postList').innerHTML='<div class="bulsa-skeleton" aria-label="공략 불러오는 중"><div class="bulsa-skeleton-card"></div><div class="bulsa-skeleton-card"></div><div class="bulsa-skeleton-card"></div></div>';const [{data,error},{data:memberRows},{data:commentRows}]=await Promise.all([sb.from('guides').select('*').order('created_at',{ascending:false}),sb.from('members').select('id,nickname'),sb.from('guide_comments').select('guide_id')]);if(error){$('postList').innerHTML=`<div class="card"><div class="small">공략 불러오기 오류: ${esc(error.message)}</div></div>`;return}const nicknameById=Object.fromEntries((memberRows||[]).map(m=>[String(m.id),m.nickname]));commentCounts={};(commentRows||[]).forEach(c=>commentCounts[String(c.guide_id)]=(commentCounts[String(c.guide_id)]||0)+1);posts=(data||[]).map(p=>({...p,author_nickname:nicknameById[String(p.author_id)]||'알 수 없음'}));
@@ -1032,5 +1069,5 @@ async function kickMember(id,nick){if(!confirm(nick+' 님을 추방할까요?'))
 function editById(id){const p=posts.find(x=>String(x.id)===String(id));if(p)openPostEditor(p)}
 async function deletePost(id){const p=posts.find(x=>String(x.id)===String(id));if(!member?.is_admin&&String(p?.author_id)!==String(member?.id))return alert('자기가 작성한 공략만 삭제할 수 있습니다.');if(!confirm('이 공략을 삭제할까요?'))return;const {error}=await sb.from('guides').delete().eq('id',id);if(error)return alert(error.message);await loadPosts();await renderAdmin()}
 function closeModal(){$('modal').classList.add('hidden')}$('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
-(async()=>{const {data:{session}}=await sb.auth.getSession();if(session?.user)await enterWithUser(session.user)})();
+(async()=>{const {data:{session}}=await sb.auth.getSession();if(session?.user)showReturningLogin(session.user);else showNormalLogin()})();
 </script></body></html>
