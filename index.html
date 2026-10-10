@@ -435,11 +435,11 @@ function statusInfo(status){
 function renderPostCard(p){
  const canEdit=member?.is_admin||String(p.author_id)===String(member?.id);
  const imgs=getImages(p),st=statusInfo(p.status);
- return `<div class="post"><span class="badge">${esc(p.category||p.cat||'공략')}</span><span class="status-badge ${st.cls}">${st.label}</span><div class="title">${esc(p.title)}</div>${p.formation?`<div class="post-formation">⚔️ 진형 · ${esc(p.formation)}</div>`:""}<div class="post-author">✍️ 작성자 · ${esc(p.author_nickname||'알 수 없음')}</div><div class="small">${new Date(p.created_at||Date.now()).toLocaleDateString('ko-KR')}</div><div class="post-body">${esc(p.content??p.body??'')}</div>${imgs.length?`<div class="image-grid">${imgs.map(u=>`<img src="${esc(u)}" loading="lazy">`).join('')}</div>`:''}<div class="post-actions"><button type="button" class="iconbtn" onclick='event.stopPropagation();copyGuideText(${JSON.stringify(String(p.id))})'>📋 전체 복사</button><button type="button" class="iconbtn" onclick='event.stopPropagation();exportGuideImage(${JSON.stringify(String(p.id))})'>🖼️ 이미지로 내보내기</button>${canEdit?`<button class="iconbtn" onclick='editById(${JSON.stringify(String(p.id))})'>수정</button><button class="iconbtn" onclick='deletePost(${JSON.stringify(String(p.id))})'>삭제</button>`:''}<button type="button" class="iconbtn" onclick='event.stopPropagation();openComments(${JSON.stringify(String(p.id))})'>💬 댓글 ${commentCounts[String(p.id)]||0}</button><button type="button" class="iconbtn" onclick='event.stopPropagation();addSameTitleById(${JSON.stringify(String(p.id))})'>➕ 추가</button></div></div>`;
+ return `<div class="post"><span class="badge">${esc(p.category||p.cat||'공략')}</span><span class="status-badge ${st.cls}">${st.label}</span><div class="title">${esc(p.title)}</div>${p.formation?`<div class="post-formation">⚔️ 진형 · ${esc(p.formation)}</div>`:""}<div class="post-author">✍️ 작성자 · ${esc(p.author_nickname||'알 수 없음')}</div><div class="small">${new Date(p.created_at||Date.now()).toLocaleDateString('ko-KR')}</div><div class="post-body">${esc(bulkStripMarker(p.content??p.body??''))}</div>${imgs.length?`<div class="image-grid">${imgs.map(u=>`<img src="${esc(u)}" loading="lazy">`).join('')}</div>`:''}<div class="post-actions"><button type="button" class="iconbtn" onclick='event.stopPropagation();copyGuideText(${JSON.stringify(String(p.id))})'>📋 전체 복사</button><button type="button" class="iconbtn" onclick='event.stopPropagation();exportGuideImage(${JSON.stringify(String(p.id))})'>🖼️ 이미지로 내보내기</button>${canEdit?`<button class="iconbtn" onclick='editById(${JSON.stringify(String(p.id))})'>수정</button><button class="iconbtn" onclick='deletePost(${JSON.stringify(String(p.id))})'>삭제</button>`:''}<button type="button" class="iconbtn" onclick='event.stopPropagation();openComments(${JSON.stringify(String(p.id))})'>💬 댓글 ${commentCounts[String(p.id)]||0}</button><button type="button" class="iconbtn" onclick='event.stopPropagation();addSameTitleById(${JSON.stringify(String(p.id))})'>➕ 추가</button></div></div>`;
 }
 function copyGuideText(id){
  const p=posts.find(x=>String(x.id)===String(id));if(!p)return;
- const txt=[`[불사 공략실]`,`제목: ${p.title||''}`,`진형: ${p.formation||'미입력'}`,`작성자: ${p.author_nickname||'알 수 없음'}`,`상태: ${p.status||'검증완료'}`,'',p.content??p.body??'',...getImages(p).map((u,i)=>`첨부 이미지 ${i+1}: ${u}`)].join('\n');
+ const txt=[`[불사 공략실]`,`제목: ${p.title||''}`,`진형: ${p.formation||'미입력'}`,`작성자: ${p.author_nickname||'알 수 없음'}`,`상태: ${p.status||'검증완료'}`,'',bulkStripMarker(p.content??p.body??''),...getImages(p).map((u,i)=>`첨부 이미지 ${i+1}: ${u}`)].join('\n');
  if(navigator.clipboard?.writeText){navigator.clipboard.writeText(txt).then(()=>alert('공략 전체를 복사했어요!')).catch(()=>fallbackCopy(txt));}else fallbackCopy(txt);
 }
 function fallbackCopy(txt){const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');alert('공략 전체를 복사했어요!')}catch(e){alert('복사할 수 없습니다.')}ta.remove()}
@@ -467,7 +467,7 @@ async function exportGuideImage(id){
  addText(`⚔ 진형  ${p.formation||'미입력'}`,30,'#ffcc8b','700',1.5,12);
  addText(`작성자  ${p.author_nickname||'알 수 없음'}    ·    ${statusInfo(p.status).label}`,25,'#b8b8b8','500',1.5,32);
  addText('공략 내용',29,'#ff9b8d','800',1.5,15);
- addText(p.content??p.body??'',30,'#eeeeee','400',1.65,35);
+ addText(bulkStripMarker(p.content??p.body??''),30,'#eeeeee','400',1.65,35);
  const urls=getImages(p);
  const imgs=[];
  for(const url of urls){
@@ -602,7 +602,7 @@ function addSameTitleById(id){
 }
 
 function openPostEditor(p=null,preset=null){
- $('modalBox').innerHTML=`<h2>${p?'공략 수정':'공략 작성'}</h2><select id="pCat"><option>길드전</option><option>공성전</option><option>파괴신</option></select><input id="pTitle" placeholder="제목" value="${esc(p?.title||preset?.title||'')}"><input id="pFormation" placeholder="진형 (예: 기본 진형, 보호 진형)" value="${esc(p?.formation||'')}"><textarea id="pBody" placeholder="공략 내용">${esc(p?.content??p?.body??'')}</textarea><label style="display:block;font-weight:900;margin-top:4px">🏷️ 공략 상태</label><select id="pStatus"><option value="검증완료">✅ 검증완료</option><option value="테스트중">🧪 테스트중</option><option value="구버전">⚠️ 구버전</option></select><label class="upload-label" for="pImages">📷 사진 선택 (여러 장 가능)</label><input id="pImages" type="file" accept="image/*" multiple style="display:none" onchange="showFileCount()"><div id="fileCount" class="upload-note">${p&&getImages(p).length?'기존 사진 '+getImages(p).length+'장 · 새 사진을 선택하면 추가됩니다.':'선택된 사진 없음'}</div><button class="btn" onclick="savePost('${p?.id||''}')">저장</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">취소</button>`;
+ $('modalBox').innerHTML=`<h2>${p?'공략 수정':'공략 작성'}</h2><select id="pCat"><option>길드전</option><option>공성전</option><option>파괴신</option></select><input id="pTitle" placeholder="제목" value="${esc(p?.title||preset?.title||'')}"><input id="pFormation" placeholder="진형 (예: 기본 진형, 보호 진형)" value="${esc(p?.formation||'')}"><textarea id="pBody" placeholder="공략 내용">${esc(bulkStripMarker(p?.content??p?.body??''))}</textarea><label style="display:block;font-weight:900;margin-top:4px">🏷️ 공략 상태</label><select id="pStatus"><option value="검증완료">✅ 검증완료</option><option value="테스트중">🧪 테스트중</option><option value="구버전">⚠️ 구버전</option></select><label class="upload-label" for="pImages">📷 사진 선택 (여러 장 가능)</label><input id="pImages" type="file" accept="image/*" multiple style="display:none" onchange="showFileCount()"><div id="fileCount" class="upload-note">${p&&getImages(p).length?'기존 사진 '+getImages(p).length+'장 · 새 사진을 선택하면 추가됩니다.':'선택된 사진 없음'}</div><button class="btn" onclick="savePost('${p?.id||''}')">저장</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">취소</button>`;
  $('modal').classList.remove('hidden');
  if(p){
   $('pCat').value=(p.category||p.cat)==='강림'?'공성전':(p.category||p.cat||'길드전');
@@ -635,7 +635,9 @@ async function savePost(id){
  try{
    const newUrls=await uploadImages(Array.from($('pImages').files||[]));
    const allUrls=[...getImages(old||{}),...newUrls];
-   const payload={category:$('pCat').value,title,formation,content,status:$('pStatus')?.value||'검증완료',author_id:old?.author_id||member.id,updated_at:new Date().toISOString()};
+   const linkedMarker=old?String(old.content??old.body??'').match(/\[불사시트연동:[^\]]+\]/)?.[0]:null;
+   const preservedContent=linkedMarker?content+'\n\n'+linkedMarker:content;
+   const payload={category:$('pCat').value,title,formation,content:preservedContent,status:$('pStatus')?.value||'검증완료',author_id:old?.author_id||member.id,updated_at:new Date().toISOString()};
    // Current DB has image_url; multiple URLs are stored as JSON text there for compatibility.
    payload.image_url=allUrls.length?JSON.stringify(allUrls):null;
    let res=id?await sb.from('guides').update(payload).eq('id',id):await sb.from('guides').insert(payload);
