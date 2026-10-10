@@ -276,22 +276,23 @@ function renderPosts(){
  const q=($('searchInput')?.value||'').trim().toLocaleLowerCase('ko-KR');
  const terms=q.split(/\s+/).map(normalizeGuideTitle).filter(Boolean);
  const categoryPosts=posts.filter(p=>category==='전체'||(p.category||p.cat)===category);
- const allCharacters=[...new Map(categoryPosts.flatMap(p=>deckTokens(p.title)).map(x=>[x.toLocaleLowerCase('ko-KR'),x])).values()].sort((a,b)=>a.localeCompare(b,'ko'));
+ const guildWarMode=category==='길드전';
+ const allCharacters=guildWarMode?[...new Map(categoryPosts.flatMap(p=>deckTokens(p.title)).map(x=>[x.toLocaleLowerCase('ko-KR'),x])).values()].sort((a,b)=>a.localeCompare(b,'ko')):[];
  // Drop selections no longer present in this category.
  for(const name of selectedCharacters){if(!allCharacters.some(x=>x.toLocaleLowerCase('ko-KR')===name.toLocaleLowerCase('ko-KR')))selectedCharacters.delete(name);}
  const a=categoryPosts.filter(p=>{
    const tokens=deckTokens(p.title).map(x=>x.toLocaleLowerCase('ko-KR'));
-   return [...selectedCharacters].every(x=>tokens.includes(x.toLocaleLowerCase('ko-KR'))) && (!terms.length||terms.every(term=>normalizeGuideTitle(p.title).includes(term)));
+   return (!guildWarMode||[...selectedCharacters].every(x=>tokens.includes(x.toLocaleLowerCase('ko-KR')))) && (!terms.length||terms.every(term=>normalizeGuideTitle(p.title).includes(term)));
  });
  $('welcome').textContent=category==='전체'?'불사 공략실':category+' 공략';
- const chips=`<div class="character-filter"><div class="filter-heading">🔎 캐릭터별 공략 찾기</div><div class="filter-hint">여러 명을 선택하면 모두 포함된 덱만 나옵니다. · 제목에서 자동 생성</div><div class="filter-chips"><button class="filter-chip ${selectedCharacters.size===0?'selected':''}" onclick="clearCharacters()">전체</button>${allCharacters.map(n=>`<button class="filter-chip ${selectedCharacters.has(n)?'selected':''}" onclick='toggleCharacter(${JSON.stringify(n)})'>${esc(n)}</button>`).join('')}</div></div>`;
+ const chips=guildWarMode?`<div class="character-filter"><div class="filter-heading">🔎 캐릭터별 공략 찾기</div><div class="filter-hint">여러 명을 선택하면 모두 포함된 덱만 나옵니다. · 제목에서 자동 생성</div><div class="filter-chips"><button class="filter-chip ${selectedCharacters.size===0?'selected':''}" onclick="clearCharacters()">전체</button>${allCharacters.map(n=>`<button class="filter-chip ${selectedCharacters.has(n)?'selected':''}" onclick='toggleCharacter(${JSON.stringify(n)})'>${esc(n)}</button>`).join('')}</div></div>`:'';
  if(!a.length){$('postList').innerHTML=chips+`<div class="card"><div class="small">${q||selectedCharacters.size?'조건에 맞는 공략이 없습니다.':'등록된 공략이 없습니다.'}</div></div>`;return;}
  const groups=new Map();
  a.forEach(p=>{const key=deckGroupKey(p.title);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p)});
  $('postList').innerHTML=chips+`<div class="small" style="margin:0 0 10px">📚 ${groups.size}개 덱 · 공략 ${a.length}개</div>`+[...groups.entries()].map(([key,group])=>{
    const first=group[0],open=expandedGuideGroups.has(key),authors=[...new Set(group.map(p=>p.author_nickname||'알 수 없음'))];
    const tokens=deckTokens(first.title);
-   return `<div class="deck-card" onclick='toggleGuideGroup(${JSON.stringify(key)})'><div class="deck-head"><div class="deck-name">${esc(tokens.join(' · '))}</div><span class="deck-count">공략 ${group.length}개</span></div><div class="deck-tags" style="margin-top:9px">${tokens.map(n=>`<span class="deck-chip ${selectedCharacters.has(n)?'selected':''}">${esc(n)}</span>`).join('')}</div><div class="deck-meta">✍️ ${esc(authors.join(' · '))}</div><div class="deck-expand">${open?'▲ 공략 접기':'▼ 공략 펼쳐보기'}</div></div>${open?`<div style="padding-left:9px;border-left:2px solid #76200f">${group.map(renderPostCard).join('')}</div>`:''}`;
+   return guildWarMode?`<div class="deck-card" onclick='toggleGuideGroup(${JSON.stringify(key)})'><div class="deck-head"><div class="deck-name">${esc(tokens.join(' · '))}</div><span class="deck-count">공략 ${group.length}개</span></div><div class="deck-tags" style="margin-top:9px">${tokens.map(n=>`<span class="deck-chip ${selectedCharacters.has(n)?'selected':''}">${esc(n)}</span>`).join('')}</div><div class="deck-meta">✍️ ${esc(authors.join(' · '))}</div><div class="deck-expand">${open?'▲ 공략 접기':'▼ 공략 펼쳐보기'}</div></div>${open?`<div style="padding-left:9px;border-left:2px solid #76200f">${group.map(renderPostCard).join('')}</div>`:''}`:`<div class="card" style="cursor:pointer" onclick='toggleGuideGroup(${JSON.stringify(key)})'><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><strong>${esc(first.title)}</strong><span class="small">공략 ${group.length}개</span></div><div class="small" style="margin-top:6px">✍️ ${esc(authors.join(' · '))} · ${open?'▲ 접기':'▼ 펼치기'}</div></div>${open?`<div style="padding-left:9px;border-left:2px solid #76200f">${group.map(renderPostCard).join('')}</div>`:''}`;
  }).join('');
 }
 
