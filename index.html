@@ -794,8 +794,16 @@ function bulkNormalizeOpponent(raw,tab){
    const base=(s.match(/([가-힣A-Za-z0-9]+)덱/)||[])[1] || (tab.replace(/\s*파훼$/,'').replace(/덱$/,''));
    title=base+'('+s+(parenthetical.length?' / '+parenthetical.join(' / '):'')+')';review=true;
  }else{
-   title=s.replace(/[\/]+/g,' ').replace(/\s+/g,' ').trim();
-   if(parenthetical.length)title+='('+parenthetical.join(' / ')+')';
+   // Only on sheet import: preserve an existing parenthetical as-is.
+   // When no parentheses exist, display characters after the first three as a note.
+   const names=s.replace(/[\/]+/g,' ').replace(/\s+/g,' ').trim().split(' ').filter(Boolean);
+   if(parenthetical.length){
+     title=names.join(' ')+'('+parenthetical.join(' / ')+')';
+   }else if(names.length>3){
+     title=names.slice(0,3).join(' ')+'('+names.slice(3).join(' ')+')';
+   }else{
+     title=names.join(' ');
+   }
    review=hasAlternatives || /\+|\?|~/.test(s);
  }
  return {title,review};
