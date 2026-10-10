@@ -470,6 +470,18 @@ body{background:#080a0e;color:#f7f8fb;line-height:1.52}
 @media(min-width:600px){#appView .lobby-shortcuts{gap:12px}#appView .lobby-shortcut{min-height:118px}}
 
 </style>
+
+<style>
+/* New wide guild artwork: preserve entire image and keep live controls in the edges. */
+#appView .bulsa-header{position:relative!important;display:block!important;height:auto!important;min-height:0!important;padding:0!important;overflow:hidden!important;margin-bottom:14px!important;background:#120406!important}
+#appView .bulsa-header .logo-block{display:block!important;width:100%!important;height:auto!important;overflow:visible!important}
+#appView .bulsa-header .logo-block img{display:block!important;width:100%!important;height:auto!important;max-width:100%!important;object-fit:contain!important;object-position:center!important}
+#appView .bulsa-header .header-actions{position:absolute!important;right:7px!important;top:7px!important;transform:none!important;width:auto!important;max-width:31%!important;display:flex!important;flex-direction:column!important;gap:5px!important;padding:0!important;z-index:4!important}
+#appView .bulsa-header .header-actions .iconbtn{width:auto!important;min-width:68px!important;min-height:30px!important;padding:6px 9px!important;font-size:11px!important;line-height:1.1!important;background:rgba(9,12,19,.88)!important;border:1px solid rgba(255,224,185,.65)!important;border-radius:8px!important;white-space:nowrap!important;box-shadow:0 2px 9px #000a!important}
+#appView .bulsa-header .notify-bell{position:absolute!important;left:7px!important;top:7px!important;transform:none!important;width:35px!important;height:35px!important;font-size:19px!important;z-index:5!important;background:rgba(9,12,19,.84)!important}
+#appView .bulsa-header .notify-bell.has-unread{animation:none!important;box-shadow:0 0 12px #ffbf00!important}
+@media(min-width:700px){#appView .bulsa-header .header-actions{right:12px!important;top:12px!important}#appView .bulsa-header .header-actions .iconbtn{font-size:13px!important;padding:9px 12px!important}#appView .bulsa-header .notify-bell{left:12px!important;top:12px!important;width:43px!important;height:43px!important;font-size:24px!important}}
+</style>
 </head><body><div class="wrap">
 <section id="loginView" class="poster-login">
  <div class="poster-inner">
@@ -491,7 +503,7 @@ body{background:#080a0e;color:#f7f8fb;line-height:1.52}
 </section>
 <section id="appView" class="hidden"><div id="who" style="display:none"></div><div class="topbar bulsa-header">
   <div class="logo-block">
-    <img src="./bulsa-banner.png?v=2" alt="불사 길드 배너">
+    <img src="./bulsa-banner-new.jpg?v=1" alt="불사 길드 배너">
   </div>
   <button id="notifyBell" class="notify-bell" onclick="openNotifications()" aria-label="댓글 알림"><span class="bell-icon">🔔</span><span id="notifyCount" class="notify-count hidden">0</span></button>
   <div class="header-actions">
@@ -727,7 +739,6 @@ function renderDesktopSidebar(){
 }
 
 function renderPosts(){
- document.querySelector('#appView .card.hero')?.classList.toggle('hidden',category==='홈');
  renderDesktopSidebar();
  updateCategoryDescription();
  if(category==='홈'){$('welcome').textContent='불사 길드';renderHome();return;}
