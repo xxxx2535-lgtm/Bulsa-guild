@@ -764,7 +764,7 @@ let bulkDrafts=[];
 function bulkIdentity(d){return JSON.stringify([d.source,bulkClean(d.opponent||''),d.sourceIndex??0]);}
 function bulkMarker(d){return '\n\n[불사시트연동:'+encodeURIComponent(bulkIdentity(d))+']';}
 function bulkReadMarker(content){const m=String(content||'').match(/\[불사시트연동:([^\]]+)\]/);if(!m)return null;try{return decodeURIComponent(m[1]);}catch(e){return null;}}
-function bulkStripMarker(content){return String(content||'').replace(/\s*\[불사시트연동:[^\]]+\]\s*$/,'').trim();}
+function bulkStripMarker(content){return String(content||'').replace(/\s*\[불사시트연동:[^\]]+\]\s*$/,'').replace(/^\s*원본\s*시트\s*[:：]\s*[^\r\n]*(?:\r?\n)?/gm,'').trim();}
 function bulkEqual(a,b){return String(a||'').replace(/\r\n/g,'\n').trim()===String(b||'').replace(/\r\n/g,'\n').trim();}
 function bulkClassification(d,rows){
  const marker=bulkIdentity(d);
@@ -803,7 +803,7 @@ function bulkNormalizeOpponent(raw,tab){
 function bulkParse(lines,tab){
  const out=[];let current=null,variant=null;
  const commit=()=>{if(!current)return; if(variant)current.variants.push(variant);variant=null;
-  if(current.variants.length){const body=['원본 시트: '+tab,'상대: '+current.opponent,'',...current.variants.flatMap((v,i)=>['[추천 조합 '+(i+1)+']',...v.lines,''])].join('\n').trim();
+  if(current.variants.length){const body=['상대: '+current.opponent,'',...current.variants.flatMap((v,i)=>['[추천 조합 '+(i+1)+']',...v.lines,''])].join('\n').trim();
    const f=current.variants.map(v=>v.formation).filter(Boolean);
    out.push({title:current.title,formation:[...new Set(f)].join(' / '),content:body,source:tab,opponent:current.opponent,sourceIndex:out.filter(x=>x.opponent===current.opponent).length,review:current.review||current.variants.some(v=>v.review),selected:true,status:'테스트중'});
   }current=null;};
