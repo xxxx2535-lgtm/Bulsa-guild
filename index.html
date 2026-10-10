@@ -303,6 +303,35 @@ body{background:#080a0e;color:#f7f8fb;line-height:1.52}
 @media(min-width:980px){.wrap{max-width:1200px;padding:18px 24px 38px}.bulsa-header{margin:0 0 15px!important;border-radius:14px!important}.app-columns{grid-template-columns:minmax(0,1fr) 292px}}
 
 </style>
+<style>
+
+/* BULSA premium visual layer: presentation-only, keeps existing banner intact */
+:root{--lux-red:#e33a48;--lux-line:rgba(242,91,102,.32)}
+.card:not(.hero),.post,.deck-card,.side-panel,.character-filter{
+ background-image:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.008) 44%,rgba(175,27,43,.035));
+ border-color:rgba(205,108,118,.23);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.075),0 9px 25px rgba(0,0,0,.19);
+ backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.deck-card,.post,.card:not(.hero){transition:border-color .25s ease,box-shadow .25s ease,transform .25s ease,background-color .25s ease}
+@media(hover:hover){.deck-card:hover,.post:hover,.card:not(.hero):hover{border-color:rgba(244,85,100,.57);box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 0 0 1px rgba(209,43,60,.12),0 13px 30px rgba(0,0,0,.28);transform:translateY(-2px)}}
+.deck-card:focus-within,.post:focus-within{border-color:var(--lux-red);box-shadow:0 0 0 1px rgba(235,54,70,.22),0 0 25px rgba(202,30,47,.12)}
+.tabs{position:relative;isolation:isolate}
+.tab{position:relative;overflow:hidden;transition:background .28s ease,color .28s ease,border-color .28s ease,box-shadow .28s ease,transform .2s ease}
+.tab::after{content:'';position:absolute;left:20%;right:20%;bottom:0;height:2px;border-radius:5px;background:#ff6b74;box-shadow:0 0 10px #f33a53;transform:scaleX(0);opacity:0;transition:transform .3s ease,opacity .3s ease}
+.tab.active::after{transform:scaleX(1);opacity:1}
+.tab:active{transform:scale(.97)}
+#postList{animation:bulsa-content-enter .27s ease both}
+@keyframes bulsa-content-enter{from{opacity:.6;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.bulsa-guide-reveal{overflow:visible;transform-origin:top;animation:bulsa-guide-expand .32s cubic-bezier(.2,.75,.2,1) both}
+@keyframes bulsa-guide-expand{from{opacity:0;transform:translateY(-9px) scaleY(.97)}to{opacity:1;transform:translateY(0) scaleY(1)}}
+.bulsa-skeleton{display:grid;gap:11px;padding:2px 0 10px}
+.bulsa-skeleton-card{height:104px;border:1px solid rgba(208,94,108,.2);border-radius:15px;background:linear-gradient(110deg,#191c23 8%,#28232b 22%,#191c23 42%);background-size:230% 100%;animation:bulsa-shimmer 1.25s ease-in-out infinite;box-shadow:inset 0 1px rgba(255,255,255,.045)}
+.bulsa-skeleton-card:nth-child(2){height:90px;animation-delay:-.35s}.bulsa-skeleton-card:nth-child(3){height:96px;animation-delay:-.7s}
+@keyframes bulsa-shimmer{to{background-position-x:-230%}}
+@media(prefers-reduced-motion:reduce){.tab,.tab::after,.deck-card,.post,.card,#postList,.bulsa-guide-reveal,.bulsa-skeleton-card{animation:none!important;transition:none!important}}
+
+</style>
 </head><body><div class="wrap">
 <section id="loginView"><div class="logo">불사</div><div class="sub">🔥 불사 길드 전용 공략실</div><div class="card hero"><h2>길드원 전용 입장</h2><div class="small">가입한 닉네임과 비밀번호를 입력하세요.</div><input id="loginEmail" placeholder="닉네임"><input id="loginPass" type="password" placeholder="비밀번호"><button class="btn" onclick="login()">입장하기</button><div style="height:8px"></div><button class="btn secondary" onclick="showRegister()">처음 오셨나요? 가입 신청</button><div id="loginMsg" class="small" style="margin-top:10px;color:#ff8f80"></div></div><div class="notice">🔒 비밀번호는 이 화면이나 소스코드에 저장되지 않습니다.</div></section>
 <section id="appView" class="hidden"><div id="who" style="display:none"></div><div class="topbar bulsa-header">
@@ -315,8 +344,8 @@ body{background:#080a0e;color:#f7f8fb;line-height:1.52}
     <button class="iconbtn" onclick="logout()">로그아웃</button>
   </div>
 </div>
-<div class="app-columns"><main class="app-main"><div class="searchbox"><span class="searchicon">🔎</span><input id="searchInput" placeholder="제목 검색 (단어 일부만 입력해도 됩니다)" oninput="renderPosts()"></div><div class="tabs"><button class="tab active" onclick="setCategory('홈',this)">🏠 홈</button><button class="tab" onclick="setCategory('전체',this)">전체</button><button class="tab" onclick="setCategory('길드전',this)">⚔️ 길드전</button><button class="tab" onclick="setCategory('공성전',this)">🏰 공성전</button><button class="tab" onclick="setCategory('파괴신',this)">💀 파괴신</button></div><div class="card hero"><h2 id="welcome">불사 공략실</h2><div id="categoryDescText" class="small">승인된 길드원은 누구나 공략을 작성할 수 있습니다.</div><button id="editCategoryDescBtn" class="mini-btn hidden" style="margin-top:10px" onclick="editCategoryDescription()">✏️ 안내 문구 수정</button></div><div id="postList"></div><div id="writeArea"><button class="btn" onclick="openPostEditor(null,{category:category})">✍️ 공략 작성</button><div id="adminBtn" class="hidden" style="height:8px"></div><button id="adminButton" class="btn gold hidden" onclick="openAdmin()">🔐 관리자 페이지</button></div><div class="footer">불사 길드</div></main><aside class="desktop-sidebar" aria-label="공략 요약"><div class="side-panel"><h3>🔥 최근 공략</h3><div id="sideRecent" class="side-items"></div></div><div class="side-panel"><h3>🏆 공략 많은 덱</h3><div id="sidePopular" class="side-items"></div></div><div class="side-panel"><h3>💡 이용 안내</h3><p>길드전에서는 캐릭터 버튼을 여러 개 선택해 원하는 덱을 찾을 수 있어요.</p><p>공략 제목에는 캐릭터 이름만 띄어 써 주세요.</p></div></aside></div></section>
-<section id="adminView" class="hidden"><div class="topbar"><div><b>🔐 관리자 페이지</b><div class="small">가입 승인 · 추방 · 공략 관리</div></div><button class="iconbtn" onclick="backApp()">돌아가기</button></div><div class="card"><h2>가입 신청 / 길드원 관리 <span id="memberCount" style="color:#ffc83d"></span></h2><div id="members"></div></div><div class="card"><h2>공략 관리</h2><div id="adminPosts"></div></div></section>
+<div class="app-columns"><main class="app-main"><div class="searchbox"><span class="searchicon">🔎</span><input id="searchInput" placeholder="제목 검색 (단어 일부만 입력해도 됩니다)" oninput="renderPosts()"></div><div class="tabs"><button class="tab active" onclick="setCategory('홈',this)">🏠 홈</button><button class="tab" onclick="setCategory('전체',this)">전체</button><button class="tab" onclick="setCategory('길드전',this)">⚔️ 길드전</button><button class="tab" onclick="setCategory('공성전',this)">🏰 공성전</button><button class="tab" onclick="setCategory('파괴신',this)">💀 파괴신</button></div><div class="card hero"><h2 id="welcome">불사 공략실</h2><div id="categoryDescText" class="small">승인된 길드원은 누구나 공략을 작성할 수 있습니다.</div><button id="editCategoryDescBtn" class="mini-btn hidden" style="margin-top:10px" onclick="editCategoryDescription()">✏️ 안내 문구 수정</button></div><div id="postList"></div><div id="writeArea"><button class="btn" onclick="openPostEditor(null,{category:category})">✍️ 공략 작성</button><div id="adminBtn" class="hidden" style="height:8px"></div><button id="adminButton" class="btn gold hidden" onclick="openAdmin()">🔐 관리자 페이지</button></div><div class="footer">불사 길드</div></main><aside class="desktop-sidebar" aria-label="공략 요약"><div class="side-panel"><h3>🔥 최근 공략</h3><div id="sideRecent" class="side-items"></div></div><div class="side-panel"><h3>🏆 공략 많은 덱</h3><div id="sidePopular" class="side-items"></div></div><div class="side-panel"><h3>💡 이용 안내</h3><p>길드전에서는 캐릭터 버튼을 여러 개 선택해 원하는 덱을 찾을 수 있어요.</p><p>공략 제목은 캐릭터 이름을 띄어 쓰고, 설명은 괄호 안에 적어 주세요. 괄호 안은 검색·캐릭터 필터에서 제외됩니다.</p></div></aside></div></section>
+<section id="adminView" class="hidden"><div class="topbar"><div><b>🔐 관리자 페이지</b><div class="small">가입 승인 · 추방 · 공략 관리</div></div><button class="iconbtn" onclick="backApp()">돌아가기</button></div><div class="card"><h2>가입 신청 / 길드원 관리 <span id="memberCount" style="color:#ffc83d"></span></h2><div id="members"></div></div><div class="card"><h2>📥 공략 일괄 등록</h2><p class="small">공개 시트에서 가져오거나 복사한 내용을 붙여넣고, 제목을 확인한 뒤 선택한 공략만 등록합니다. 자동 저장하지 않습니다.</p><button class="btn" onclick="openBulkImporter()">공략 가져오기 · 미리보기</button><div style="height:8px"></div><button class="btn secondary" onclick="rollbackBulkImport()">↩️ 마지막 일괄 등록 취소</button></div><div class="card"><h2>공략 관리</h2><div id="adminPosts"></div></div></section>
 </div><div id="modal" class="modal hidden"><div class="modalbox" id="modalBox"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -339,7 +368,7 @@ async function enterWithUser(user){ const {data:m,error}=await sb.from('members'
 async function logout(){await sb.auth.signOut();member=null;show('loginView')}
 function showRegister(){ $('modalBox').innerHTML=`<h2>가입 신청</h2><div class="small">닉네임과 비밀번호로 가입 신청하고 관리자 승인을 기다려주세요.</div><input id="regNick" placeholder="게임 닉네임"><input id="regPass" type="password" placeholder="비밀번호 (6자 이상)"><button class="btn" onclick="register()">가입 신청</button><div style="height:8px"></div><button class="btn secondary" onclick="closeModal()">닫기</button>`;$('modal').classList.remove('hidden')}
 async function register(){const nickname=$('regNick').value.trim(),password=$('regPass').value;if(!nickname||password.length<6)return alert('닉네임과 6자 이상 비밀번호를 입력해주세요.');if(nickname.length>30)return alert('닉네임은 30자 이하로 입력해주세요.');const email=nickEmail(nickname);const {data,error}=await sb.auth.signUp({email,password,options:{data:{nickname}}});if(error){if(String(error.message).toLowerCase().includes('already')||String(error.message).toLowerCase().includes('registered'))return alert('이미 사용 중인 닉네임입니다.');return alert('가입 실패: '+error.message)}closeModal();alert('가입 신청 완료! 관리자 승인을 기다려주세요.');await sb.auth.signOut()}
-async function loadPosts(){const [{data,error},{data:memberRows},{data:commentRows}]=await Promise.all([sb.from('guides').select('*').order('created_at',{ascending:false}),sb.from('members').select('id,nickname'),sb.from('guide_comments').select('guide_id')]);if(error){$('postList').innerHTML=`<div class="card"><div class="small">공략 불러오기 오류: ${esc(error.message)}</div></div>`;return}const nicknameById=Object.fromEntries((memberRows||[]).map(m=>[String(m.id),m.nickname]));commentCounts={};(commentRows||[]).forEach(c=>commentCounts[String(c.guide_id)]=(commentCounts[String(c.guide_id)]||0)+1);posts=(data||[]).map(p=>({...p,author_nickname:nicknameById[String(p.author_id)]||'알 수 없음'}));
+async function loadPosts(){if($('postList'))$('postList').innerHTML='<div class="bulsa-skeleton" aria-label="공략 불러오는 중"><div class="bulsa-skeleton-card"></div><div class="bulsa-skeleton-card"></div><div class="bulsa-skeleton-card"></div></div>';const [{data,error},{data:memberRows},{data:commentRows}]=await Promise.all([sb.from('guides').select('*').order('created_at',{ascending:false}),sb.from('members').select('id,nickname'),sb.from('guide_comments').select('guide_id')]);if(error){$('postList').innerHTML=`<div class="card"><div class="small">공략 불러오기 오류: ${esc(error.message)}</div></div>`;return}const nicknameById=Object.fromEntries((memberRows||[]).map(m=>[String(m.id),m.nickname]));commentCounts={};(commentRows||[]).forEach(c=>commentCounts[String(c.guide_id)]=(commentCounts[String(c.guide_id)]||0)+1);posts=(data||[]).map(p=>({...p,author_nickname:nicknameById[String(p.author_id)]||'알 수 없음'}));
  const guideId=new URLSearchParams(location.search).get('guide');
  if(guideId){const target=posts.find(p=>String(p.id)===guideId);if(target){category=target.category||target.cat||'길드전';const k=deckGroupKey(target.title);expandedGuideGroups.add(k);}}
  renderPosts()}
@@ -382,9 +411,14 @@ function updateCategoryDescription(){
  box.textContent=message;
  const btn=$('editCategoryDescBtn');if(btn)btn.classList.toggle('hidden',category==='홈'||!member?.is_admin);
 }
+// 괄호 안은 화면 표시용 설명이며 캐릭터 필터·제목 검색에서는 제외합니다.
+// 일반 소괄호와 전각 소괄호를 모두 지원합니다.
+function searchableDeckTitle(title){
+ return String(title||'').replace(/\([^()]*\)|（[^（）]*）/gu,' ').replace(/\s+/g,' ').trim();
+}
 function deckGroupKey(title){
  // 공백/쉼표로 구분된 캐릭터 이름의 순서만 무시한다. 붙여 쓴 이름은 분리하지 않는다.
- const names=String(title||'').normalize('NFKC').toLocaleLowerCase('ko-KR').split(/[\s,，、]+/u).filter(Boolean);
+ const names=searchableDeckTitle(title).normalize('NFKC').toLocaleLowerCase('ko-KR').split(/[\s,，、]+/u).filter(Boolean);
  return JSON.stringify(names.sort((a,b)=>a.localeCompare(b,'ko')));
 }
 const expandedGuideGroups=new Set();
@@ -488,7 +522,7 @@ async function exportGuideImage(id){
 }
 function deckTokens(title){
  // Titles are character names separated by whitespace or commas; concatenated names stay one token.
- return [...new Set(String(title||'').normalize('NFKC').split(/[\s,，、]+/u).map(x=>x.trim()).filter(Boolean))];
+ return [...new Set(searchableDeckTitle(title).normalize('NFKC').split(/[\s,，、]+/u).map(x=>x.trim()).filter(Boolean))];
 }
 function toggleCharacter(name){
  if(selectedCharacters.has(name))selectedCharacters.delete(name);else selectedCharacters.add(name);
@@ -519,7 +553,7 @@ function renderPosts(){
  for(const name of selectedCharacters){if(!allCharacters.some(x=>x.toLocaleLowerCase('ko-KR')===name.toLocaleLowerCase('ko-KR')))selectedCharacters.delete(name);}
  const a=categoryPosts.filter(p=>{
    const tokens=deckTokens(p.title).map(x=>x.toLocaleLowerCase('ko-KR'));
-   return (!guildWarMode||[...selectedCharacters].every(x=>tokens.includes(x.toLocaleLowerCase('ko-KR')))) && (!terms.length||terms.every(term=>normalizeGuideTitle(p.title).includes(term)));
+   return (!guildWarMode||[...selectedCharacters].every(x=>tokens.includes(x.toLocaleLowerCase('ko-KR')))) && (!terms.length||terms.every(term=>normalizeGuideTitle(searchableDeckTitle(p.title)).includes(term)));
  });
  $('welcome').textContent=category==='전체'?'불사 공략실':category+' 공략';
  const previewCharacters=allCharacters.filter(n=>selectedCharacters.has(n)).concat(allCharacters.filter(n=>!selectedCharacters.has(n))).slice(0,CHARACTER_FILTER_PREVIEW);
@@ -532,7 +566,7 @@ function renderPosts(){
  $('postList').innerHTML=chips+`<div class="small" style="margin:0 0 10px">📚 ${groups.size}개 덱 · 공략 ${a.length}개</div>`+[...groups.entries()].map(([key,group],deckIndex)=>{
    const first=group[0],open=expandedGuideGroups.has(key),authors=[...new Set(group.map(p=>p.author_nickname||'알 수 없음'))];
    const tokens=deckTokens(first.title);
-   return guildWarMode?`<div class="deck-card" onclick='toggleGuideGroup(${JSON.stringify(key)})'><div class="deck-head"><span class="deck-number">${deckIndex+1}</span><div class="deck-title-wrap"><div class="deck-name">${esc(tokens.join(' · '))}</div></div><span class="deck-count">공략 ${group.length}개</span></div><div class="deck-tags" style="margin-top:9px">${tokens.map(n=>`<span class="deck-chip ${selectedCharacters.has(n)?'selected':''}">${esc(n)}</span>`).join('')}</div><div class="deck-meta">✍️ ${esc(authors.join(' · '))}</div><div class="deck-expand">${open?'▲ 공략 접기':'▼ 공략 펼쳐보기'}</div></div>${open?`<div style="padding-left:9px;border-left:2px solid #76200f">${group.map(renderPostCard).join('')}</div>`:''}`:`<div class="card" style="cursor:pointer" onclick='toggleGuideGroup(${JSON.stringify(key)})'><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><strong>${esc(first.title)}</strong><span class="small">공략 ${group.length}개</span></div><div class="small" style="margin-top:6px">✍️ ${esc(authors.join(' · '))} · ${open?'▲ 접기':'▼ 펼치기'}</div></div>${open?`<div style="padding-left:9px;border-left:2px solid #76200f">${group.map(renderPostCard).join('')}</div>`:''}`;
+   return guildWarMode?`<div class="deck-card" onclick='toggleGuideGroup(${JSON.stringify(key)})'><div class="deck-head"><span class="deck-number">${deckIndex+1}</span><div class="deck-title-wrap"><div class="deck-name">${esc(first.title)}</div></div><span class="deck-count">공략 ${group.length}개</span></div><div class="deck-tags" style="margin-top:9px">${tokens.map(n=>`<span class="deck-chip ${selectedCharacters.has(n)?'selected':''}">${esc(n)}</span>`).join('')}</div><div class="deck-meta">✍️ ${esc(authors.join(' · '))}</div><div class="deck-expand">${open?'▲ 공략 접기':'▼ 공략 펼쳐보기'}</div></div>${open?`<div class="bulsa-guide-reveal" style="padding-left:9px;border-left:2px solid #76200f">${group.map(renderPostCard).join('')}</div>`:''}`:`<div class="card" style="cursor:pointer" onclick='toggleGuideGroup(${JSON.stringify(key)})'><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><strong>${esc(first.title)}</strong><span class="small">공략 ${group.length}개</span></div><div class="small" style="margin-top:6px">✍️ ${esc(authors.join(' · '))} · ${open?'▲ 접기':'▼ 펼치기'}</div></div>${open?`<div class="bulsa-guide-reveal" style="padding-left:9px;border-left:2px solid #76200f">${group.map(renderPostCard).join('')}</div>`:''}`;
  }).join('');
 }
 
@@ -707,6 +741,117 @@ async function saveNickname(targetId){
  if(!$('adminView').classList.contains('hidden'))await renderAdmin();
  alert('표시 닉네임이 변경되었습니다.\n로그인할 때는 기존 닉네임을 사용해주세요.');
 }
+
+// Admin-only preview/import. No database schema changes; only guides table is used.
+const BULK_SHEET_ID='1tZNiwON5dbCt9JZyGZe2slTdR1z1l3-Tu9QgU4A3hHA';
+const BULK_TABS=['귀칼 파훼','아일린 파훼','하연 파훼','윤건파훼','선란파훼','동영파훼','여포파훼','아리스파훼','실베파훼','미스트파훼','녹스파훼'];
+let bulkDrafts=[];
+function bulkClean(s){return String(s??'').trim();}
+function bulkPlainTitle(s){return searchableDeckTitle(s).replace(/[\/•·]+/g,' ').replace(/\s+/g,' ').trim();}
+function bulkNormalizeOpponent(raw,tab){
+ let s=bulkClean(raw).replace(/^■\s*상대\s*[:：]\s*/,'').trim();
+ // Keep conditions in parentheses, but do not hallucinate missing full names.
+ const parenthetical=[...s.matchAll(/\(([^)]*)\)/g)].map(x=>x[1].trim());
+ s=s.replace(/\([^)]*\)/g,'').trim();
+ const isConditional=/없는|제외|모든|이외|상관|포함|기타|덱|외\b/.test(s);
+ const hasAlternatives=/[•·]|\s+또는\s+/.test(s);
+ let title='';let review=false;
+ if(isConditional){
+   const base=(s.match(/([가-힣A-Za-z0-9]+)덱/)||[])[1] || (tab.replace(/\s*파훼$/,'').replace(/덱$/,''));
+   title=base+'('+s+(parenthetical.length?' / '+parenthetical.join(' / '):'')+')';review=true;
+ }else{
+   title=s.replace(/[\/]+/g,' ').replace(/\s+/g,' ').trim();
+   if(parenthetical.length)title+='('+parenthetical.join(' / ')+')';
+   review=hasAlternatives || /\+|\?|~/.test(s);
+ }
+ return {title,review};
+}
+function bulkParse(lines,tab){
+ const out=[];let current=null,variant=null;
+ const commit=()=>{if(!current)return; if(variant)current.variants.push(variant);variant=null;
+  if(current.variants.length){const body=['원본 시트: '+tab,'상대: '+current.opponent,'',...current.variants.flatMap((v,i)=>['[추천 조합 '+(i+1)+']',...v.lines,''])].join('\n').trim();
+   const f=current.variants.map(v=>v.formation).filter(Boolean);
+   out.push({title:current.title,formation:[...new Set(f)].join(' / '),content:body,source:tab,review:current.review||current.variants.some(v=>v.review),selected:true,status:'테스트중'});
+  }current=null;};
+ for(const raw of lines){let line=bulkClean(raw);if(!line)continue;
+  if(/^■\s*상대\s*[:：]/.test(line)){
+   commit();const normalized=bulkNormalizeOpponent(line,tab);
+   current={opponent:line.replace(/^■\s*상대\s*[:：]\s*/,''),title:normalized.title,review:normalized.review,variants:[]};continue;
+  }
+  if(/^➡️?\s*추천\s*조합\s*[:：]/.test(line)){
+   if(!current){current={opponent:'상대 조건 미기재 (원본 확인 필요)',title:tab.replace(/\s*파훼$/,'')+'(상대 미기재)',review:true,variants:[]};}
+   if(variant)current.variants.push(variant);
+   const form=(line.match(/\(([^)]*(?:진|전열|후열)[^)]*)\)/)||[])[1]||'';
+   variant={lines:[line],formation:form,review:false};continue;
+  }
+  if(variant)variant.lines.push(line);
+  // Section headers such as '윤건덱' are not themselves individual guides.
+ }
+ commit();return out;
+}
+function bulkRowsToLines(rows){return rows.flatMap(row=>row.map(c=>typeof c==='string'?c:(c?.f??c?.v??'')).filter(v=>String(v).trim())).flatMap(v=>String(v).split(/\r?\n/));}
+function bulkReadPublicSheet(tab){return new Promise((resolve,reject)=>{
+ const cb='bulsaSheetCb_'+Math.random().toString(36).slice(2);
+ const script=document.createElement('script');let done=false;
+ const finish=(err,rows)=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];script.remove();err?reject(err):resolve(rows)};
+ window[cb]=data=>{if(data?.status!=='ok')return finish(new Error(data?.errors?.[0]?.detailed_message||'공개 시트 응답 오류'));
+ const rows=(data.table?.rows||[]).map(r=>(r.c||[]).map(c=>c?.f??c?.v??''));finish(null,rows)};
+ const timer=setTimeout(()=>finish(new Error('시트 읽기 시간 초과 / 공개 API 접근 제한')),14000);
+ script.onerror=()=>finish(new Error('시트 읽기 차단됨 (구글 공개 API 접근 제한)'));
+ const tqx=encodeURIComponent('out:json;responseHandler:'+cb);
+ script.src=`https://docs.google.com/spreadsheets/d/${BULK_SHEET_ID}/gviz/tq?tqx=${tqx}&sheet=${encodeURIComponent(tab)}&headers=0`;
+ document.head.appendChild(script);
+ });}
+function openBulkImporter(){if(!member?.is_admin)return;
+ bulkDrafts=[];
+ $('modalBox').innerHTML=`<h2>📥 파훼 공략 일괄 등록</h2><p class="small">원본 시트는 수정하지 않습니다. 공개 시트 직접 읽기를 먼저 시도하세요. 실패하면 시트 내용을 붙여넣을 수 있습니다.</p><button class="btn" onclick="bulkFetchAll()">🔄 공개 시트 11개 가져오기</button><div id="bulkStatus" class="small" style="margin:9px 0"></div><label>직접 붙여넣기 (대체 방법)</label><select id="bulkTab">${BULK_TABS.map(t=>`<option>${esc(t)}</option>`).join('')}</select><textarea id="bulkPaste" placeholder="■ 상대 : 윤건 / 동영 / 오목 (윤동목)&#10;➡️ 추천 조합 : ...&#10;📝 스킬 순서 : ..." style="min-height:110px"></textarea><button class="btn secondary" onclick="bulkParsePasted()">붙여넣은 공략 분석</button><div id="bulkPreview" style="margin-top:15px"></div><button class="btn secondary" style="margin-top:12px" onclick="closeModal()">닫기</button>`;
+ $('modal').classList.remove('hidden');}
+async function bulkFetchAll(){if(!member?.is_admin)return;bulkDrafts=[];
+ const failures=[];for(let i=0;i<BULK_TABS.length;i++){
+  const tab=BULK_TABS[i];$('bulkStatus').textContent=`읽는 중 ${i+1}/${BULK_TABS.length}: ${tab}`;
+  try{const rows=await bulkReadPublicSheet(tab);bulkDrafts.push(...bulkParse(bulkRowsToLines(rows),tab));}
+  catch(e){failures.push(`${tab}: ${e.message}`);}
+ }
+ $('bulkStatus').textContent=`분석 ${bulkDrafts.length}건 / 실패 ${failures.length}개 시트`+(failures.length?' — '+failures.join(' | '):'');bulkRenderPreview();}
+function bulkParsePasted(){const t=$('bulkPaste').value.trim();if(!t)return alert('먼저 공략 내용을 붙여넣어 주세요.');
+ const tab=$('bulkTab').value;const rows=t.split(/\r?\n/).flatMap(line=>line.split('\t')).filter(Boolean);
+ const parsed=bulkParse(rows,tab);bulkDrafts.push(...parsed);$('bulkStatus').textContent=`추가 ${parsed.length}건, 전체 ${bulkDrafts.length}건`;bulkRenderPreview();}
+function bulkEdit(i,key,value){if(!bulkDrafts[i])return;bulkDrafts[i][key]=value;if(key==='title')bulkDrafts[i].review=false;}
+function bulkToggle(i,checked){if(bulkDrafts[i])bulkDrafts[i].selected=checked;bulkUpdateCount();}
+function bulkUpdateCount(){const el=$('bulkCount');if(el)el.textContent=`총 ${bulkDrafts.length}건 · 선택 ${bulkDrafts.filter(d=>d.selected).length}건`;}
+function bulkRenderPreview(){const box=$('bulkPreview');if(!box)return;
+ if(!bulkDrafts.length){box.innerHTML='<div class="notice">분석된 공략이 없습니다. 구글 접근 제한이면 직접 붙여넣기를 이용해 주세요.</div>';return;}
+ const existing=new Set(posts.filter(p=>(p.category||p.cat)==='길드전').map(p=>normalizeGuideTitle(p.title)));
+ const seen=new Set();box.innerHTML=`<h3>📋 등록 전 미리보기</h3><p id="bulkCount" class="small"></p><p class="small">⚠️ 제목은 자동 추정입니다. 조건부·복수 선택 공략은 반드시 검토하세요. 기본 상태는 '테스트중'입니다.</p><button class="mini-btn" onclick="bulkSelectAll(false)">전체 해제</button> <button class="mini-btn" onclick="bulkSelectAll(true)">전체 선택</button><div id="bulkItems"></div><button id="bulkSaveButton" class="btn" onclick="bulkSave()">선택한 공략 등록</button>`;
+ $('bulkItems').innerHTML=bulkDrafts.map((d,i)=>{
+ const key=normalizeGuideTitle(d.title);const duplicate=existing.has(key)||seen.has(key);seen.add(key);
+ if(duplicate){d.selected=false;d.duplicate=true;}
+ return `<div class="post" style="margin:12px 0"><label style="display:flex;gap:9px;align-items:center"><input type="checkbox" style="width:auto;margin:0" ${d.selected?'checked':''} onchange="bulkToggle(${i},this.checked)"><strong>${i+1}. ${esc(d.source)}</strong></label><div class="small" style="color:${duplicate?'#ffb06a':d.review?'#ffd48b':'#9fd4aa'}">${duplicate?'⚠️ 동일 제목 존재 · 기본 제외':d.review?'⚠️ 제목/조건 검토 필요':'제목 확인 권장'}</div><label class="small">등록 제목 (괄호 안은 검색 제외)</label><input value="${esc(d.title)}" oninput="bulkEdit(${i},'title',this.value)"><label class="small">진형</label><input value="${esc(d.formation)}" oninput="bulkEdit(${i},'formation',this.value)"><label class="small">공략 내용 (원문 대조)</label><textarea style="min-height:170px" oninput="bulkEdit(${i},'content',this.value)">${esc(d.content)}</textarea></div>`}).join('');bulkUpdateCount();}
+function bulkSelectAll(value){bulkDrafts.forEach(d=>d.selected=value&&!d.duplicate);bulkRenderPreview();}
+async function bulkSave(){if(!member?.is_admin)return;const selected=bulkDrafts.filter(d=>d.selected&&d.title.trim()&&d.content.trim());
+ if(!selected.length)return alert('등록할 공략을 선택해 주세요.');
+ if(!confirm(`${selected.length}개 공략을 실제 사이트에 등록할까요?\n기존 공략은 수정하지 않습니다.`))return;
+ const btn=$('bulkSaveButton');btn.disabled=true;let inserted=[],failed=[];
+ const existing=new Set(posts.filter(p=>(p.category||p.cat)==='길드전').map(p=>normalizeGuideTitle(p.title)));
+ for(const d of selected){const key=normalizeGuideTitle(d.title);if(existing.has(key)){failed.push(d.title+' (동일 제목)');continue;}
+ const payload={category:'길드전',title:d.title.trim(),formation:d.formation.trim(),content:d.content.trim(),status:'테스트중',author_id:member.id,updated_at:new Date().toISOString(),image_url:null};
+ const {data,error}=await sb.from('guides').insert(payload).select('id').single();
+ if(error){failed.push(d.title+' ('+error.message+')');continue;}
+ inserted.push(data.id);existing.add(key);
+ }
+ if(inserted.length){localStorage.setItem('bulsaLastBulk_'+member.id,JSON.stringify(inserted));}
+ await loadPosts();btn.disabled=false;alert(`등록 완료 ${inserted.length}건 / 제외·실패 ${failed.length}건`+(failed.length?'\n'+failed.slice(0,8).join('\n'):''));
+ if(inserted.length){closeModal();await renderAdmin();}
+}
+async function rollbackBulkImport(){if(!member?.is_admin)return;const key='bulsaLastBulk_'+member.id;
+ let ids=[];try{ids=JSON.parse(localStorage.getItem(key)||'[]')}catch(e){}
+ if(!ids.length)return alert('이 브라우저에 마지막 일괄 등록 기록이 없습니다. 개별 공략 삭제는 관리자 공략 관리에서 가능합니다.');
+ if(!confirm(`마지막 일괄 등록 ${ids.length}건을 삭제할까요?\n등록 후 수정한 공략도 삭제되므로 주의하세요.`))return;
+ const {error}=await sb.from('guides').delete().in('id',ids).eq('author_id',member.id);
+ if(error)return alert('복구 오류: '+error.message);
+ localStorage.removeItem(key);await loadPosts();await renderAdmin();alert('마지막 일괄 등록 공략을 삭제했습니다.');
+}
+
 async function openAdmin(){if(!member?.is_admin)return alert('관리자만 들어갈 수 있습니다.');show('adminView');await renderAdmin()}
 function backApp(){show('appView')}
 async function renderAdmin(){const {data:ms,error}=await sb.from('members').select('*').order('approved',{ascending:true});if(error){$('members').innerHTML='<div class="small">'+esc(error.message)+'</div>';return}const approvedCount=(ms||[]).filter(m=>m.approved).length;if($('memberCount'))$('memberCount').textContent=`(${approvedCount}명)`;$('members').innerHTML=(ms||[]).map(m=>`<div class="member"><div><strong>${esc(m.nickname)} ${m.is_admin?'👑':''}</strong><span>${m.approved?(m.is_admin?'관리자':'승인된 길드원'):'승인 대기'}</span></div><div class="row">${m.approved?`<button class="iconbtn" onclick="openNicknameEditor(\'${m.id}\')">닉네임</button>`:''}${!m.approved?`<button class="iconbtn" onclick="approveMember('${m.id}')">승인</button>`:''}${m.id!==member.id?`<button class="iconbtn" onclick="kickMember('${m.id}','${esc(m.nickname)}')">추방</button>`:''}</div></div>`).join('')||'<div class="small">회원이 없습니다.</div>';$('adminPosts').innerHTML=posts.map(p=>`<div class="member"><div><strong>${esc(p.title)}</strong><span>${esc(p.category||p.cat||'공략')}</span></div><div class="row"><button class="iconbtn" onclick='editById(${JSON.stringify(String(p.id))})'>수정</button><button class="iconbtn" onclick='deletePost(${JSON.stringify(String(p.id))})'>삭제</button></div></div>`).join('')||'<div class="small">공략이 없습니다.</div>'}
