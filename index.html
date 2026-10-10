@@ -337,8 +337,66 @@ body{background:#080a0e;color:#f7f8fb;line-height:1.52}
 .author-filter-chip{border:1px solid #414e5b;background:#202a35;color:#cbd4df;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:750;cursor:pointer;min-height:31px}
 .author-filter-chip.selected{background:#b52330;border-color:#ed4654;color:#fff}
 </style>
+<style>
+/* Premium login only — does not affect app/admin screens */
+#loginView.lux-login{position:relative;isolation:isolate;min-height:100svh;margin:-10px -12px -34px;padding:30px 17px 35px;overflow:hidden;background:radial-gradient(ellipse at 50% 5%,#4a101b 0%,#190d15 30%,#080b11 68%,#06080d 100%)}
+#loginView.lux-login::before{content:"";position:absolute;inset:0;z-index:-1;opacity:.28;background:repeating-linear-gradient(0deg,transparent 0,transparent 39px,#9f5b6221 40px),repeating-linear-gradient(90deg,transparent 0,transparent 39px,#9f5b6221 40px);mask-image:linear-gradient(#0006,transparent 75%)}
+#loginView.lux-login::after{content:"";position:absolute;z-index:-1;left:50%;top:55px;width:310px;height:310px;transform:translateX(-50%);border-radius:50%;border:1px solid #e24b5633;box-shadow:0 0 0 30px #c43a4410,0 0 0 65px #c43a4407,0 0 110px #e5284035;pointer-events:none}
+.login-ambient{position:absolute;z-index:-1;pointer-events:none;border-radius:50%;filter:blur(70px)}.login-ambient-one{width:240px;height:180px;background:#a5153160;top:75px;left:-120px}.login-ambient-two{width:210px;height:180px;background:#bc5b1824;top:240px;right:-130px}
+.login-content{max-width:430px;margin:0 auto;position:relative}.login-eyebrow{display:flex;align-items:center;justify-content:center;gap:9px;color:#b8a5a8;font-size:9px;font-weight:800;letter-spacing:2px;margin:11px 0 34px;white-space:nowrap}.login-spark{width:7px;height:7px;border-radius:50%;background:#ff5362;box-shadow:0 0 12px #ff3c52}.login-rule{width:22px;height:1px;background:#93656a}
+.login-crest{position:relative;width:104px;height:112px;margin:0 auto 12px;display:grid;place-items:center;clip-path:polygon(50% 0,94% 19%,94% 74%,50% 100%,6% 74%,6% 19%);background:linear-gradient(145deg,#ffe3b2,#9e5a4b 40%,#ff5b6b 58%,#4e1b2c);filter:drop-shadow(0 0 16px #ff314b60)}.crest-inner{display:grid;place-items:center;width:97px;height:105px;clip-path:inherit;background:linear-gradient(140deg,#37151e,#0b0e14 75%);color:#fbe4d2;font-family:serif;font-weight:900;font-size:34px;letter-spacing:-3px;text-shadow:0 0 16px #fa4d57}.crest-ember{position:absolute;bottom:13px;color:#ffb99d;font-size:12px}
+.login-brand{text-align:center;font-size:66px;font-weight:1000;letter-spacing:-6px;line-height:1.1;color:#fff8f2;text-shadow:0 3px 0 #5b1e2a,0 0 24px #e93e5066}.login-brand-en{text-align:center;font-size:10px;color:#dca6a4;letter-spacing:3px;font-weight:900;margin-top:7px}.login-tagline{text-align:center;margin:24px 0 29px;font-size:18px;font-weight:900;color:#f7e5dd;letter-spacing:-.5px}.login-tagline span{display:block;font-size:12px;font-weight:500;color:#b2a6ae;margin-top:6px;letter-spacing:0}
+#loginView .login-panel{position:relative;border:1px solid #93505b8a;border-radius:22px;padding:25px 23px 20px;background:linear-gradient(145deg,#26202aeb,#10141cf7 60%,#13151df7);box-shadow:0 22px 60px #0009,inset 0 1px #fff2;backdrop-filter:blur(14px)}#loginView .login-panel::before{content:"";position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,transparent,#fca1a0,transparent);box-shadow:0 0 16px #ff5469}
+.login-panel-top{display:flex;align-items:center;gap:10px;justify-content:center;color:#c8a6a5;font-size:9px;letter-spacing:2.2px;font-weight:900}.login-panel-line{height:1px;width:27px;background:#80545c}#loginView .login-panel h2{text-align:center;font-size:25px;font-weight:950;margin:13px 0 3px;color:#fff}#loginView .login-desc{text-align:center;font-size:12px;color:#aeb5c1;margin:0 0 25px}.login-field-label{display:block;font-size:10px;font-weight:900;letter-spacing:1.8px;color:#c9b4b8;margin:0 0 6px 3px}.login-input-wrap{position:relative;margin-bottom:16px}.login-field-icon{position:absolute;top:50%;left:15px;transform:translateY(-50%);color:#d4a2a9;font-size:19px;pointer-events:none}#loginView .login-input-wrap input{margin:0;height:54px;padding:12px 54px 12px 43px;background:#0a0e16;border:1px solid #42414f;border-radius:12px;color:white;font-size:14px;transition:border-color .2s,box-shadow .2s}#loginView .login-input-wrap input:focus{border-color:#f46a76;box-shadow:0 0 0 3px #ef455324}#loginView .login-input-wrap input::placeholder{color:#737783}.login-eye{position:absolute;right:9px;top:50%;transform:translateY(-50%);border:0;background:#252a35;color:#c8cbd3;border-radius:7px;font-size:11px;font-weight:800;padding:7px 9px;cursor:pointer}#loginView .login-primary{margin-top:6px;display:flex;justify-content:center;align-items:center;gap:16px;height:56px;font-size:16px;background:linear-gradient(105deg,#ff3d50,#c30c2e 70%,#8d0825);border:1px solid #ff7a7e;box-shadow:0 8px 24px #d4133952,inset 0 1px #ffffff40;letter-spacing:-.2px}#loginView .login-primary:active{transform:scale(.99)}#loginView .login-secondary{margin-top:12px;background:transparent;border:1px solid #44414d;box-shadow:none;color:#aeb3bf;font-weight:500;font-size:12px}#loginView .login-secondary strong{color:#ffe3d9;font-weight:850}#loginView .login-error{margin-top:10px;color:#ff998f;text-align:center;min-height:0}.login-security{text-align:center;margin:19px 0 28px;color:#8d939f;font-size:10px;line-height:1.6}.login-bottom{border-top:1px solid #51434b55;padding-top:17px;display:flex;justify-content:space-between;color:#6d737f;font-size:9px;letter-spacing:1.2px;font-weight:800}.login-bottom span{color:#9e7980}
+@media(min-width:600px){#loginView.lux-login{margin:-10px -12px -34px;padding-top:40px}}@media(max-width:360px){#loginView.lux-login{padding-left:12px;padding-right:12px}.login-panel{padding-left:16px!important;padding-right:16px!important}.login-brand{font-size:58px}.login-eyebrow{font-size:8px;letter-spacing:1px}}
+@media(prefers-reduced-motion:no-preference){.login-crest{animation:crestFloat 5s ease-in-out infinite}@keyframes crestFloat{50%{transform:translateY(-5px)}}}
+</style>
+<style>
+/* Cinematic Seven Knights Re:BIRTH guild login, scoped to login only */
+#loginView.lux-login{background:#09080b;min-height:100svh;min-height:100dvh;overflow:hidden;padding-top:22px;padding-bottom:42px}
+#loginView.lux-login::before{content:"";position:absolute;inset:-20px;z-index:-2;background:url("./bulsa-login-bg.webp") center top / cover no-repeat;opacity:.72;filter:brightness(.62) saturate(1.18) blur(3px);mask-image:none;pointer-events:none}
+#loginView.lux-login::after{content:"";position:absolute;inset:0;z-index:-1;width:auto;height:auto;left:0;top:0;transform:none;border:0;border-radius:0;box-shadow:none;background:linear-gradient(90deg,#0b0709aa 0%,#0c080ab8 18%,#08090bd9 50%,#0c080ab8 82%,#0b0709aa 100%);pointer-events:none}
+#loginView .login-content{max-width:490px;position:relative;z-index:2}
+#loginView .cinematic-brand{text-align:center;margin:0 auto 24px;display:flex;flex-direction:column;align-items:center;gap:4px}
+#loginView .cinematic-game-logo{display:block;width:min(75%,285px);height:145px;object-fit:cover;object-position:center 35%;border-radius:12px;filter:drop-shadow(0 0 18px #f1233050);mask-image:radial-gradient(ellipse 66% 62% at 50% 50%,#000 50%,transparent 100%)}
+#loginView .cinematic-guild-name{font-size:clamp(44px,11vw,64px);font-weight:1000;line-height:1.12;letter-spacing:4px;color:#fff5e9;text-shadow:0 2px 2px #240708,0 0 16px #f42a2a,0 0 30px #b21717}
+#loginView .cinematic-guild-sub{font-size:15px;letter-spacing:.8px;font-weight:850;color:#ffe0b0;text-shadow:0 2px 9px #0a0404}
+#loginView .login-panel{border:1px solid #e6a35c9e;background:linear-gradient(145deg,#141015f2,#080a0ff2 70%,#170a0ef2);box-shadow:0 0 0 1px #9d222533,0 14px 55px #000b,0 0 38px #ed3c2629;border-radius:24px;padding:27px 22px}
+#loginView .login-panel::before{background:linear-gradient(90deg,transparent,#e6a45e,#ff4742,#e6a45e,transparent)}
+#loginView .login-panel h2{color:#fff4e9;font-size:25px;text-shadow:0 0 18px #e32b3666}
+#loginView .login-desc{color:#c7b8b5}
+#loginView .login-input-wrap{background:#0d0f14ed;border-color:#665050}
+#loginView .login-primary{background:linear-gradient(110deg,#a30713,#f02828 48%,#a40b12);border:1px solid #ffc176;box-shadow:0 0 18px #ed273d69,0 5px 18px #0009;color:white}
+#loginView .login-secondary{border:1px solid #70545c;background:#19161ae8}
+#loginView .login-security{background:#09080dd9;border:1px solid #9b673c70;border-radius:14px;padding:12px 8px;color:#ebd1ad;text-align:center;font-size:11px;margin-top:14px}
+#loginView .login-bottom{color:#aa8c85}
+#loginView .login-ambient{display:none}
+@media(max-width:480px){#loginView.lux-login{padding-top:12px}#loginView .cinematic-game-logo{height:130px}#loginView .cinematic-brand{margin-bottom:15px}#loginView .login-panel{padding:21px 16px}#loginView .cinematic-guild-name{font-size:50px}}
+</style>
 </head><body><div class="wrap">
-<section id="loginView"><div class="logo">불사</div><div class="sub">🔥 불사 길드 전용 공략실</div><div class="card hero"><h2>길드원 전용 입장</h2><div class="small">가입한 닉네임과 비밀번호를 입력하세요.</div><input id="loginEmail" placeholder="닉네임"><input id="loginPass" type="password" placeholder="비밀번호"><button class="btn" onclick="login()">입장하기</button><div style="height:8px"></div><button class="btn secondary" onclick="showRegister()">처음 오셨나요? 가입 신청</button><div id="loginMsg" class="small" style="margin-top:10px;color:#ff8f80"></div></div><div class="notice">🔒 비밀번호는 이 화면이나 소스코드에 저장되지 않습니다.</div></section>
+<section id="loginView" class="lux-login">
+  <div class="login-ambient login-ambient-one"></div><div class="login-ambient login-ambient-two"></div>
+  <div class="login-content">
+    <div class="cinematic-brand">
+      <img class="cinematic-game-logo" src="./bulsa-seven-knights-logo.webp" alt="SEVEN KNIGHTS Re:BIRTH">
+      <div class="cinematic-guild-name">불사</div>
+      <div class="cinematic-guild-sub">✦ 불사 길드 전용 공략실 ✦</div>
+    </div>
+    <div class="login-panel">
+      <div class="login-panel-top"><span class="login-panel-line"></span><span>MEMBERS ONLY</span><span class="login-panel-line"></span></div>
+      <h2>길드원 전용 입장</h2><p class="login-desc">가입한 닉네임과 비밀번호를 입력하세요.</p>
+      <label for="loginEmail" class="login-field-label">NICKNAME</label>
+      <div class="login-input-wrap"><span class="login-field-icon" aria-hidden="true">♙</span><input id="loginEmail" placeholder="길드 닉네임" autocomplete="username" autocapitalize="off"></div>
+      <label for="loginPass" class="login-field-label">PASSWORD</label>
+      <div class="login-input-wrap"><span class="login-field-icon" aria-hidden="true">◇</span><input id="loginPass" type="password" placeholder="비밀번호" autocomplete="current-password"><button type="button" class="login-eye" onclick="toggleLoginPassword()" aria-label="비밀번호 표시 전환">보기</button></div>
+      <button class="btn login-primary" onclick="login()"><span>입장하기</span><span aria-hidden="true">↗</span></button>
+      <button class="btn secondary login-secondary" onclick="showRegister()">처음 오셨나요? <strong>가입 신청</strong></button>
+      <div id="loginMsg" class="small login-error" role="status"></div>
+    </div>
+    <div class="login-security">♢ &nbsp; 비밀번호는 이 화면이나 소스코드에 저장되지 않습니다.</div>
+    <div class="login-bottom">BULSA &nbsp;·&nbsp; STRATEGY ARCHIVE <span>EST. 2026</span></div>
+  </div>
+</section>
 <section id="appView" class="hidden"><div id="who" style="display:none"></div><div class="topbar bulsa-header">
   <div class="logo-block">
     <img src="./bulsa-banner.png?v=2" alt="불사 길드 배너">
@@ -368,6 +426,7 @@ let member=null,posts=[],category='홈',battleMembers=[],noticeRow=null,commentC
 const $=id=>document.getElementById(id); const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 function show(id){['loginView','appView','adminView'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden')}
 function nickEmail(n){return encodeURIComponent(n.trim().toLowerCase())+'@bulsa-guild.local'}
+function toggleLoginPassword(){const x=document.getElementById('loginPass');const b=document.querySelector('.login-eye');if(!x)return;x.type=x.type==='password'?'text':'password';if(b)b.textContent=x.type==='password'?'보기':'숨김';}
 async function login(){ $('loginMsg').textContent='로그인 중...'; const nickname=$('loginEmail').value.trim(),password=$('loginPass').value; if(!nickname||!password){$('loginMsg').textContent='닉네임과 비밀번호를 입력해주세요.';return} const email=nickEmail(nickname); const {data,error}=await sb.auth.signInWithPassword({email,password}); if(error){$('loginMsg').textContent='로그인 실패: 닉네임 또는 비밀번호를 확인해주세요.';return} await enterWithUser(data.user); }
 async function enterWithUser(user){ const {data:m,error}=await sb.from('members').select('*').eq('id',user.id).maybeSingle(); if(error){$('loginMsg').textContent='회원정보 확인 오류: '+error.message;return} if(!m){await sb.auth.signOut();$('loginMsg').textContent='가입 신청 정보가 없습니다.';return} if(!m.approved){await sb.auth.signOut();$('loginMsg').textContent='아직 관리자 승인을 기다리는 중입니다.';return} member=m; $('who').textContent=(m.nickname||user.email)+'님 환영합니다.'; show('appView'); $('writeArea').classList.remove('hidden'); $('adminButton').classList.toggle('hidden',!m.is_admin); $('adminBtn').classList.toggle('hidden',!m.is_admin); await loadPosts(); await loadSiteData(); await loadCategoryDescriptions(); await loadNotifications(); }
 async function logout(){await sb.auth.signOut();member=null;show('loginView')}
