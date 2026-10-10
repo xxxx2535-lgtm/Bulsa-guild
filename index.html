@@ -78,6 +78,24 @@
 .filter-heading{font-weight:900;color:#ffd28b;margin-bottom:5px}.filter-hint{font-size:12px;color:#aaa;margin-bottom:10px}
 .filter-chips,.deck-tags{display:flex;flex-wrap:wrap;gap:7px}.filter-chip{border:1px solid #62504a;background:#302523;color:#e8d6cc;border-radius:9px;padding:7px 11px;font-size:13px;font-weight:800;cursor:pointer}.filter-chip.selected{background:#bd2821;color:white;border-color:#ff725b}.deck-chip{display:inline-block;border-radius:7px;background:#362b2a;border:1px solid #59423c;padding:4px 8px;font-size:12px;color:#f3ddd0}.deck-chip.selected{background:#8c2924;border-color:#e85a4e;color:#fff}
 .deck-card{background:linear-gradient(120deg,#261b19,#181717);border:1px solid #65403a;border-radius:13px;padding:13px;margin:9px 0;cursor:pointer}.deck-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.deck-name{font-size:17px;font-weight:950;line-height:1.5}.deck-count{background:#9c251c;color:white;border-radius:9px;padding:5px 9px;white-space:nowrap;font-size:12px;font-weight:900}.deck-meta{font-size:12px;color:#c9aaa0;margin-top:8px;line-height:1.5}.deck-expand{font-size:12px;color:#ffa96d;margin-top:9px;font-weight:800}
+
+/* Mobile: keep the existing write action visible above the bottom safe area. */
+@media (max-width: 599px) {
+  #appView:not(.hidden) #writeArea > button.btn:first-child {
+    position: fixed;
+    left: max(14px, env(safe-area-inset-left));
+    right: max(14px, env(safe-area-inset-right));
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    z-index: 8;
+    min-height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(115deg,#f32631,#bc071a);
+    box-shadow: 0 8px 28px #000b, 0 2px 15px #db132b66;
+    font-size: 16px;
+  }
+  #appView:not(.hidden) .app-main { padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+}
 </style>
 <link rel="icon" type="image/png" sizes="512x512" href="./icon.png?v=2">
 <link rel="apple-touch-icon" sizes="512x512" href="./icon.png?v=2">
@@ -167,6 +185,121 @@
 }
 </style>
 
+<style>
+/* v24 — site-wide visual refinement; no data or behavior changes */
+:root{--red:#e24a3f;--gold:#eab96c;--muted:#a7a4a4}
+body{background:#0d0e11;color:#f2f0ef;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:560px;padding:12px 15px 38px}
+.card{background:#191b20;border:1px solid #2d3037;border-radius:15px;padding:16px;box-shadow:none;margin-bottom:12px}
+.card.hero{background:#1c1d23;border-color:#363138}
+.card.hero h2{font-size:19px;letter-spacing:-.5px;margin-bottom:7px}
+h2{font-size:19px;letter-spacing:-.4px}
+.small{color:#aaaeb8;line-height:1.6}
+.bulsa-header{border-radius:14px!important;margin:0 0 13px!important;border:1px solid #3b2928!important;background:#210d0d!important}
+.tabs{gap:7px;margin:11px 0 13px;padding-bottom:4px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.tab{background:#1a1c21;border:1px solid #30333a;color:#b7b8be;border-radius:10px;padding:10px 13px;font-size:13px;font-weight:750;transition:background .15s}
+.tab.active{background:#a82d2a;border-color:#d34a43;color:#fff;box-shadow:none}
+.searchbox{margin-bottom:10px}.searchbox input{background:#191b20;border:1px solid #34363d;border-radius:12px;height:45px;font-size:13px;padding-left:42px}
+.searchicon{top:12px}
+input,textarea,select{background:#111318;border:1px solid #363942;border-radius:11px;padding:12px;color:#f7f5f3}
+input:focus,textarea:focus,select:focus{border-color:#bc6558;box-shadow:0 0 0 2px #b6463525}
+.btn{border-radius:11px;background:#bb3933;font-size:14px;font-weight:800;padding:12px 15px;box-shadow:none}
+.btn.secondary{background:#2b2e36}.btn.gold{background:#b48a47;color:#18120b}
+.iconbtn,.mini-btn{background:#282b32;border:1px solid #41444d;border-radius:9px;color:#e8e8eb;font-size:12px;font-weight:750}
+.post{background:#1b1d23;border:1px solid #32353d;border-radius:13px;padding:14px;margin:8px 0}
+.post .title{font-size:16px;line-height:1.45}.post-author{color:#d9b58c;font-size:12px}
+.post-body{color:#d7d8dc;line-height:1.75;font-size:14px;overflow-wrap:anywhere}
+.badge{background:#392322;border:1px solid #6c3934;color:#efb6ab}
+.notice{background:#242018;border:1px solid #55452e;color:#e4cda0}
+.notice-home{background:#211e1b;border:1px solid #5b4830;box-shadow:none}
+.notice-home h2{color:#f0c984}
+.character-filter{background:#191b20;border:1px solid #33363d;border-radius:14px;padding:13px;margin:10px 0 14px}
+.filter-heading{color:#f0d3bd;font-size:14px}.filter-hint{color:#9fa1a9;font-size:11px;line-height:1.5}
+.filter-chips,.deck-tags{gap:6px}
+.filter-chip{background:#282b31;border:1px solid #3b3e46;color:#d5d5da;border-radius:8px;padding:7px 10px;font-size:12px;font-weight:750}
+.filter-chip.selected{background:#a93833;border-color:#cb514a;color:white}
+.deck-card{background:#1b1d23;border:1px solid #33363d;border-radius:12px;padding:13px;margin:8px 0;box-shadow:none}
+.deck-card:active{background:#24262d}
+.deck-name{font-size:15px;font-weight:850;line-height:1.5;letter-spacing:-.25px}
+.deck-count{background:#472b2b;color:#ffbdb5;border:1px solid #72413d;border-radius:8px;padding:4px 7px;font-size:11px}
+.deck-chip{background:#292c33;border:1px solid #3c414a;color:#d9d9df;border-radius:6px;padding:3px 7px;font-size:11px}
+.deck-chip.selected{background:#60312f;border-color:#9e4c45;color:#ffe1d9}
+.deck-meta{color:#aaaeb8;font-size:11px;margin-top:7px}.deck-expand{color:#dba995;font-size:11px;margin-top:7px}
+.member,.comment,.battle-row{background:#1b1d23;border-color:#33363d;border-radius:11px}
+.member{flex-wrap:wrap}.row{flex-wrap:wrap}
+.modal{background:#000c}.modalbox{background:#1b1d22;border:1px solid #454751;border-radius:19px 19px 12px 12px;box-shadow:0 16px 50px #0009}
+.home-image{border:1px solid #37343a;border-radius:14px;box-shadow:none}
+.footer{color:#777a82}
+#writeArea{margin-top:15px}
+#loginView .logo{font-size:44px;text-shadow:0 0 12px #a6221a}
+#loginView .sub{color:#dcb48b}
+@media(max-width:430px){.wrap{padding:9px 11px 32px}.card{padding:14px}.deck-card{padding:12px}.tab{padding:9px 11px}.post-actions{flex-wrap:wrap}.post-actions button{min-width:60px}}
+
+/* Desktop: content + information sidebar. Mobile: full-width content only. */
+.app-columns{display:block;min-width:0}.app-main{min-width:0}.desktop-sidebar{display:none}
+.side-panel{background:#17191e;border:1px solid #343740;border-radius:16px;padding:17px;margin-bottom:14px}
+.side-panel h3{font-size:16px;margin:0 0 12px;padding-bottom:12px;border-bottom:1px solid #343740}
+.side-panel p{font-size:13px;color:#adb0b9;line-height:1.65;margin:8px 0}
+.side-item{padding:10px 0;border-bottom:1px solid #2b2e34}.side-item:last-child{border-bottom:0}
+.side-item-title{font-size:13px;font-weight:750;color:#f0f0f2;overflow-wrap:anywhere}
+.side-item-sub{font-size:11px;color:#9b9fa9;margin-top:4px}
+@media(min-width:980px){.wrap{max-width:1200px;padding-left:26px;padding-right:26px}.app-columns{display:grid;grid-template-columns:minmax(0,1fr) 292px;gap:20px;align-items:start}.desktop-sidebar{display:block;position:sticky;top:18px}.bulsa-header{margin-left:0!important;margin-right:0!important;border-radius:16px}.tabs{flex-wrap:wrap}}
+@media(min-width:600px) and (max-width:979px){.wrap{max-width:760px}}
+</style>
+
+<style>
+
+/* v26: cinematic mobile-first redesign. Keep the original banner and all functionality. */
+:root{--red:#ef252e;--gold:#ffc66c;--muted:#a8aebb}
+body{background:#080a0e;color:#f7f8fb;line-height:1.52}
+.wrap{max-width:560px;padding:10px 12px 34px}
+.bulsa-header{border:0!important;border-radius:0!important;margin:0 -12px 12px!important;background:#130305!important;box-shadow:0 8px 26px #0009!important}
+.bulsa-header .logo-block img{width:100%!important;height:auto!important;object-fit:contain!important}
+.tabs{display:flex;gap:5px;margin:10px 0 15px;padding:0 0 4px;overflow-x:auto;scrollbar-width:none}
+.tab{flex:1 0 auto;text-align:center;background:linear-gradient(160deg,#191f28,#0f131a);border:1px solid #35404d;color:#e0e5eb;border-radius:10px;padding:12px 13px;font-size:13px;font-weight:800;box-shadow:inset 0 1px #ffffff0a}
+.tab.active{background:linear-gradient(125deg,#f22430,#bd0719);border-color:#ff4d58;box-shadow:0 3px 16px #e0002740;color:white}
+.card{background:linear-gradient(150deg,#14191f,#0e1218);border:1px solid #303b47;border-radius:16px;padding:16px;box-shadow:none}
+.card.hero{background:linear-gradient(135deg,#15191e,#0c1015);border:1px solid #6a292e;padding:17px 16px}
+.card.hero h2{font-size:23px;font-weight:900;margin:0 0 5px;letter-spacing:-.7px}
+.small{color:#aab6c4}
+.searchbox{margin:0 0 11px}.searchbox input{height:47px;background:linear-gradient(140deg,#171f29,#111820);border:1px solid #40505f;border-radius:12px;font-size:13px;color:#f5f6f8;padding-left:42px}.searchicon{top:12px;left:14px}
+.btn{background:linear-gradient(115deg,#f32631,#bc071a);border:1px solid #f44a53;border-radius:12px;box-shadow:0 5px 20px #e000242b;font-size:14px}
+.btn.secondary{background:#222a34;border:1px solid #3b4856;box-shadow:none}
+.btn.gold{background:linear-gradient(135deg,#b98536,#80541f);border:1px solid #d5a95a;box-shadow:none;color:white}
+.iconbtn,.mini-btn{background:linear-gradient(135deg,#202831,#131920);border:1px solid #45515e;border-radius:10px;color:#f1f3f6}
+.character-filter{background:linear-gradient(140deg,#131920,#0b1016);border:1px solid #36424e;border-radius:16px;padding:14px;margin:13px 0 16px}
+.filter-heading{font-size:15px;font-weight:900;color:#fff;margin-bottom:3px}.filter-hint{font-size:11px;color:#a9b3c0;margin-bottom:13px}
+.filter-chips{gap:8px}.filter-chip{background:linear-gradient(140deg,#1b2530,#121820);border:1px solid #425161;color:#e2e9f0;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:800;min-height:36px}
+.filter-chip.selected{background:linear-gradient(120deg,#ed2430,#b80a19);border-color:#ff5560;color:white;box-shadow:0 3px 12px #dd001d38}
+.deck-card{position:relative;background:linear-gradient(125deg,#171e27,#10151c);border:1px solid #384653;border-radius:15px;padding:14px;margin:10px 0;box-shadow:inset 0 1px #ffffff07;transition:background .15s,border-color .15s}
+.deck-card:active{background:#202934;border-color:#d43b45}
+.deck-head{align-items:center;gap:8px}.deck-name{font-size:16px;font-weight:900;letter-spacing:-.45px;line-height:1.45;overflow-wrap:anywhere}
+.deck-count{background:linear-gradient(115deg,#b9212d,#86111e);border:1px solid #d73543;color:#fff;border-radius:20px;padding:6px 10px;font-size:11px;flex-shrink:0}
+.deck-tags{gap:6px!important}.deck-chip{background:#28323e;border:1px solid #455262;color:#e3ebf3;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:750}
+.deck-chip.selected{background:#a82a33;border-color:#ee4b56;color:white}
+.deck-meta{font-size:11px;color:#b8c5d3;margin-top:10px;line-height:1.5}.deck-expand{font-size:11px;color:#e0a3a7;margin-top:8px}
+.deck-number{flex:0 0 31px;width:31px;height:31px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#303a48;color:#fff;font-size:15px;font-weight:900;margin-right:2px}
+.deck-title-wrap{flex:1;min-width:0}
+.deck-head .deck-count{align-self:flex-start}
+.post{background:#151c24;border:1px solid #374552;border-radius:14px;padding:14px}
+.post .title{font-size:16px}.post-body{color:#d8e0e8}.post-author{color:#ffd17d}
+.badge{background:#5a1c26;border-color:#a12d3b;color:#ffd7dc}
+.notice-home{background:linear-gradient(130deg,#27181a,#131820);border:1px solid #77414a}.notice-home h2{color:#ffd47b}
+.side-panel{background:#141a21;border:1px solid #384553}.side-panel h3{border-color:#303e4a}
+.modalbox{background:#141b23;border:1px solid #465361}
+@media(max-width:599px){
+ .wrap{padding:8px 10px 30px}
+ .bulsa-header{margin-left:-10px!important;margin-right:-10px!important}
+ .card.hero{padding:15px 14px}.card.hero h2{font-size:21px}
+ .tabs{gap:5px}.tab{padding:10px 10px;font-size:12px}
+ .filter-chips{gap:7px}.filter-chip{padding:8px 10px;font-size:12px}
+ .deck-card{padding:12px}.deck-name{font-size:14px}.deck-number{flex-basis:27px;width:27px;height:27px;font-size:13px}
+ .deck-count{padding:5px 7px;font-size:10px}.deck-chip{font-size:11px;padding:4px 7px}
+ .header-actions .iconbtn{background:#111820d9!important;border:1px solid #52606c!important}
+}
+@media(min-width:980px){.wrap{max-width:1200px;padding:18px 24px 38px}.bulsa-header{margin:0 0 15px!important;border-radius:14px!important}.app-columns{grid-template-columns:minmax(0,1fr) 292px}}
+
+</style>
 </head><body><div class="wrap">
 <section id="loginView"><div class="logo">불사</div><div class="sub">🔥 불사 길드 전용 공략실</div><div class="card hero"><h2>길드원 전용 입장</h2><div class="small">가입한 닉네임과 비밀번호를 입력하세요.</div><input id="loginEmail" placeholder="닉네임"><input id="loginPass" type="password" placeholder="비밀번호"><button class="btn" onclick="login()">입장하기</button><div style="height:8px"></div><button class="btn secondary" onclick="showRegister()">처음 오셨나요? 가입 신청</button><div id="loginMsg" class="small" style="margin-top:10px;color:#ff8f80"></div></div><div class="notice">🔒 비밀번호는 이 화면이나 소스코드에 저장되지 않습니다.</div></section>
 <section id="appView" class="hidden"><div id="who" style="display:none"></div><div class="topbar bulsa-header">
@@ -179,7 +312,7 @@
     <button class="iconbtn" onclick="logout()">로그아웃</button>
   </div>
 </div>
-<div class="searchbox"><span class="searchicon">🔎</span><input id="searchInput" placeholder="제목 검색 (단어 일부만 입력해도 됩니다)" oninput="renderPosts()"></div><div class="tabs"><button class="tab active" onclick="setCategory('홈',this)">🏠 홈</button><button class="tab" onclick="setCategory('전체',this)">전체</button><button class="tab" onclick="setCategory('길드전',this)">⚔️ 길드전</button><button class="tab" onclick="setCategory('공성전',this)">🏰 공성전</button><button class="tab" onclick="setCategory('파괴신',this)">💀 파괴신</button></div><div class="card hero"><h2 id="welcome">불사 공략실</h2><div id="categoryDescText" class="small">승인된 길드원은 누구나 공략을 작성할 수 있습니다.</div><button id="editCategoryDescBtn" class="mini-btn hidden" style="margin-top:10px" onclick="editCategoryDescription()">✏️ 안내 문구 수정</button></div><div id="postList"></div><div id="writeArea"><button class="btn" onclick="openPostEditor(null,{category:category})">✍️ 공략 작성</button><div id="adminBtn" class="hidden" style="height:8px"></div><button id="adminButton" class="btn gold hidden" onclick="openAdmin()">🔐 관리자 페이지</button></div><div class="footer">불사 길드</div></section>
+<div class="app-columns"><main class="app-main"><div class="searchbox"><span class="searchicon">🔎</span><input id="searchInput" placeholder="제목 검색 (단어 일부만 입력해도 됩니다)" oninput="renderPosts()"></div><div class="tabs"><button class="tab active" onclick="setCategory('홈',this)">🏠 홈</button><button class="tab" onclick="setCategory('전체',this)">전체</button><button class="tab" onclick="setCategory('길드전',this)">⚔️ 길드전</button><button class="tab" onclick="setCategory('공성전',this)">🏰 공성전</button><button class="tab" onclick="setCategory('파괴신',this)">💀 파괴신</button></div><div class="card hero"><h2 id="welcome">불사 공략실</h2><div id="categoryDescText" class="small">승인된 길드원은 누구나 공략을 작성할 수 있습니다.</div><button id="editCategoryDescBtn" class="mini-btn hidden" style="margin-top:10px" onclick="editCategoryDescription()">✏️ 안내 문구 수정</button></div><div id="postList"></div><div id="writeArea"><button class="btn" onclick="openPostEditor(null,{category:category})">✍️ 공략 작성</button><div id="adminBtn" class="hidden" style="height:8px"></div><button id="adminButton" class="btn gold hidden" onclick="openAdmin()">🔐 관리자 페이지</button></div><div class="footer">불사 길드</div></main><aside class="desktop-sidebar" aria-label="공략 요약"><div class="side-panel"><h3>🔥 최근 공략</h3><div id="sideRecent" class="side-items"></div></div><div class="side-panel"><h3>🏆 공략 많은 덱</h3><div id="sidePopular" class="side-items"></div></div><div class="side-panel"><h3>💡 이용 안내</h3><p>길드전에서는 캐릭터 버튼을 여러 개 선택해 원하는 덱을 찾을 수 있어요.</p><p>공략 제목에는 캐릭터 이름만 띄어 써 주세요.</p></div></aside></div></section>
 <section id="adminView" class="hidden"><div class="topbar"><div><b>🔐 관리자 페이지</b><div class="small">가입 승인 · 추방 · 공략 관리</div></div><button class="iconbtn" onclick="backApp()">돌아가기</button></div><div class="card"><h2>가입 신청 / 길드원 관리 <span id="memberCount" style="color:#ffc83d"></span></h2><div id="members"></div></div><div class="card"><h2>공략 관리</h2><div id="adminPosts"></div></div></section>
 </div><div id="modal" class="modal hidden"><div class="modalbox" id="modalBox"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -270,7 +403,19 @@ function toggleCharacter(name){
  renderPosts();
 }
 function clearCharacters(){selectedCharacters.clear();renderPosts();}
+
+function renderDesktopSidebar(){
+ const recent=document.getElementById('sideRecent'),popular=document.getElementById('sidePopular');
+ if(!recent||!popular)return;
+ const relevant=posts.filter(p=>category==='홈'||category==='전체'||(p.category||p.cat)===category);
+ recent.innerHTML=relevant.slice(0,5).map(p=>`<div class="side-item"><div class="side-item-title">${esc(p.title||'제목 없음')}</div><div class="side-item-sub">${esc(p.author_nickname||'알 수 없음')} · ${esc(p.category||p.cat||'공략')}</div></div>`).join('')||'<p>등록된 공략이 없습니다.</p>';
+ const grouped=new Map();
+ relevant.forEach(p=>{const k=deckGroupKey(p.title);if(!grouped.has(k))grouped.set(k,{title:p.title,count:0});grouped.get(k).count++});
+ popular.innerHTML=[...grouped.values()].sort((a,b)=>b.count-a.count).slice(0,5).map((g,i)=>`<div class="side-item"><div class="side-item-title">${i+1}. ${esc(g.title)}</div><div class="side-item-sub">공략 ${g.count}개</div></div>`).join('')||'<p>등록된 공략이 없습니다.</p>';
+}
+
 function renderPosts(){
+ renderDesktopSidebar();
  updateCategoryDescription();
  if(category==='홈'){$('welcome').textContent='불사 길드';renderHome();return;}
  const q=($('searchInput')?.value||'').trim().toLocaleLowerCase('ko-KR');
@@ -289,10 +434,10 @@ function renderPosts(){
  if(!a.length){$('postList').innerHTML=chips+`<div class="card"><div class="small">${q||selectedCharacters.size?'조건에 맞는 공략이 없습니다.':'등록된 공략이 없습니다.'}</div></div>`;return;}
  const groups=new Map();
  a.forEach(p=>{const key=deckGroupKey(p.title);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p)});
- $('postList').innerHTML=chips+`<div class="small" style="margin:0 0 10px">📚 ${groups.size}개 덱 · 공략 ${a.length}개</div>`+[...groups.entries()].map(([key,group])=>{
+ $('postList').innerHTML=chips+`<div class="small" style="margin:0 0 10px">📚 ${groups.size}개 덱 · 공략 ${a.length}개</div>`+[...groups.entries()].map(([key,group],deckIndex)=>{
    const first=group[0],open=expandedGuideGroups.has(key),authors=[...new Set(group.map(p=>p.author_nickname||'알 수 없음'))];
    const tokens=deckTokens(first.title);
-   return guildWarMode?`<div class="deck-card" onclick='toggleGuideGroup(${JSON.stringify(key)})'><div class="deck-head"><div class="deck-name">${esc(tokens.join(' · '))}</div><span class="deck-count">공략 ${group.length}개</span></div><div class="deck-tags" style="margin-top:9px">${tokens.map(n=>`<span class="deck-chip ${selectedCharacters.has(n)?'selected':''}">${esc(n)}</span>`).join('')}</div><div class="deck-meta">✍️ ${esc(authors.join(' · '))}</div><div class="deck-expand">${open?'▲ 공략 접기':'▼ 공략 펼쳐보기'}</div></div>${open?`<div style="padding-left:9px;border-left:2px solid #76200f">${group.map(renderPostCard).join('')}</div>`:''}`:`<div class="card" style="cursor:pointer" onclick='toggleGuideGroup(${JSON.stringify(key)})'><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><strong>${esc(first.title)}</strong><span class="small">공략 ${group.length}개</span></div><div class="small" style="margin-top:6px">✍️ ${esc(authors.join(' · '))} · ${open?'▲ 접기':'▼ 펼치기'}</div></div>${open?`<div style="padding-left:9px;border-left:2px solid #76200f">${group.map(renderPostCard).join('')}</div>`:''}`;
+   return guildWarMode?`<div class="deck-card" onclick='toggleGuideGroup(${JSON.stringify(key)})'><div class="deck-head"><span class="deck-number">${deckIndex+1}</span><div class="deck-title-wrap"><div class="deck-name">${esc(tokens.join(' · '))}</div></div><span class="deck-count">공략 ${group.length}개</span></div><div class="deck-tags" style="margin-top:9px">${tokens.map(n=>`<span class="deck-chip ${selectedCharacters.has(n)?'selected':''}">${esc(n)}</span>`).join('')}</div><div class="deck-meta">✍️ ${esc(authors.join(' · '))}</div><div class="deck-expand">${open?'▲ 공략 접기':'▼ 공략 펼쳐보기'}</div></div>${open?`<div style="padding-left:9px;border-left:2px solid #76200f">${group.map(renderPostCard).join('')}</div>`:''}`:`<div class="card" style="cursor:pointer" onclick='toggleGuideGroup(${JSON.stringify(key)})'><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><strong>${esc(first.title)}</strong><span class="small">공략 ${group.length}개</span></div><div class="small" style="margin-top:6px">✍️ ${esc(authors.join(' · '))} · ${open?'▲ 접기':'▼ 펼치기'}</div></div>${open?`<div style="padding-left:9px;border-left:2px solid #76200f">${group.map(renderPostCard).join('')}</div>`:''}`;
  }).join('');
 }
 
@@ -304,6 +449,7 @@ async function loadSiteData(){
  if(category==='홈')renderHome();
 }
 function renderHome(){
+ renderDesktopSidebar();
  const notice=noticeRow?.content||'등록된 공지가 없습니다.';
  $('postList').innerHTML=`<div class="card notice-home"><h2>📢 길드 공지</h2><div class="post-body">${esc(notice)}</div>${member?.is_admin?`<div style="height:10px"></div><button class="btn gold" onclick="editNotice()">공지 수정</button>`:''}</div><img class="home-image" src="./home.png?v=1" alt="불사 길드 홍보 이미지">`;
 }
