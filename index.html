@@ -121,6 +121,27 @@
 #loginView .login-security{background:#10090ad9;border-color:#94603f;color:#ebc99d}
 #loginView .login-bottom{color:#d2b29e;text-shadow:0 1px 3px #000}
 @media(max-width:600px){#loginView.lux-login{padding:13px 16px 30px;background-position:center top;background-size:100% 100%!important}#loginView .cinematic-game-logo{width:min(78%,295px)}#loginView .cinematic-brand{padding-bottom:14px}#loginView .login-panel{padding:22px 17px 20px}#loginView .login-security{margin-top:22px}}
+
+/* 포스터 원본을 전체 배경으로 유지하고, 중앙 로그인 영역만 HTML로 덮습니다. */
+#loginView.poster-login{display:block!important;position:relative!important;isolation:isolate!important;width:100vw!important;max-width:none!important;min-height:0!important;height:auto!important;aspect-ratio:830/1840!important;margin:-10px calc(50% - 50vw) -34px!important;padding:0!important;background:#100609 url('./bulsa-login-poster.png') center top/100% 100% no-repeat!important;overflow:hidden!important;border:0!important}
+#loginView.poster-login.hidden{display:none!important}
+#loginView.poster-login:before,#loginView.poster-login:after{display:none!important}
+#loginView .poster-inner{position:absolute;inset:0;container-type:inline-size}
+#loginView .poster-form{position:absolute;top:45.6%;left:14.8%;width:70.4%;height:32.2%;padding:0.6cqw 0 0;display:flex;flex-direction:column;align-items:stretch;gap:1.4cqw;background:linear-gradient(180deg,#130b0b 0%,#0e0909 60%,#100b0b 100%);color:#fff5e8;box-shadow:0 0 10px #160704;overflow:visible}
+#loginView .poster-form h2{font-size:4.3cqw!important;font-weight:950;text-align:center;margin:0!important;color:#fff3e9;text-shadow:0 0 8px #ed2528}
+#loginView .poster-form p{font-size:2.5cqw!important;text-align:center;color:#d5c5bb;margin:0 0 2.2cqw!important}
+#loginView .poster-input{display:flex;align-items:center;width:100%;height:9.8cqw;border:1px solid #c89564;border-radius:2.5cqw;background:linear-gradient(#181719,#0c0c10);box-shadow:inset 0 0 8px #0007;overflow:hidden}
+#loginView .poster-input span{flex:0 0 10%;text-align:center;color:#e8b8a3;font-size:4cqw}
+#loginView .poster-input input{display:block;min-width:0;flex:1;height:100%;padding:0 1cqw!important;margin:0!important;border:0!important;background:transparent!important;color:#fff!important;box-shadow:none!important;font-size:3cqw!important;outline:0}
+#loginView .poster-input input::placeholder{color:#898087}
+#loginView .poster-eye{position:static!important;transform:none!important;flex:0 0 auto;margin:0 2cqw 0 0;padding:1cqw!important;border-radius:1.5cqw;background:#27232b;color:#fff;font-size:2.5cqw}
+#loginView .poster-submit{width:100%;height:10.3cqw;flex:0 0 auto;margin-top:1cqw!important;border:1px solid #ffcb83!important;border-radius:2cqw!important;background:linear-gradient(180deg,#f7372c,#c7000e 65%,#80020b)!important;box-shadow:0 0 13px #fa332888,inset 0 2px 0 #fff5;font-size:3.8cqw!important;font-weight:900;color:#fff}
+#loginView .poster-register{width:100%;height:8.7cqw;flex:0 0 auto;border:1px solid #b48a69;border-radius:2cqw;background:linear-gradient(180deg,#282125,#131113);color:#e9d9cf;font-size:2.9cqw}
+#loginView .poster-register strong{color:#fff}
+#loginView .poster-security{font-size:2.25cqw;text-align:center;color:#e6cda7;white-space:nowrap;padding:1cqw 0}
+#loginView .poster-error{color:#ffac91;text-align:center;font-size:2.5cqw;line-height:1.2}
+@media(min-width:700px){#loginView.poster-login{width:min(100vw,540px)!important;margin:0 auto!important}}
+
 </style>
 <link rel="icon" type="image/png" sizes="512x512" href="./icon.png?v=2">
 <link rel="apple-touch-icon" sizes="512x512" href="./icon.png?v=2">
@@ -395,29 +416,37 @@ body{background:#080a0e;color:#f7f8fb;line-height:1.52}
 #loginView .login-ambient{display:none}
 @media(max-width:480px){#loginView.lux-login{padding-top:12px}#loginView .cinematic-game-logo{height:130px}#loginView .cinematic-brand{margin-bottom:15px}#loginView .login-panel{padding:21px 16px}#loginView .cinematic-guild-name{font-size:50px}}
 </style>
+
+<style>
+/* v-login-final: clean battlefield artwork + real, interactive foreground UI */
+#loginView.lux-login{background:#10090d url('./bulsa-login-battlefield.webp') center top / cover no-repeat!important;isolation:isolate;min-height:100dvh;padding-top:18px!important;padding-bottom:32px!important}
+#loginView.lux-login::before{content:''!important;position:absolute!important;inset:0!important;z-index:-1!important;background:linear-gradient(180deg,rgba(11,4,8,.23) 0%,rgba(12,5,10,.38) 29%,rgba(10,6,10,.23) 68%,rgba(7,4,7,.58) 100%)!important;opacity:1!important;filter:none!important;mask-image:none!important;pointer-events:none!important}
+#loginView.lux-login::after{display:none!important}
+#loginView .cinematic-brand{gap:2px!important;margin-bottom:20px!important;padding:0!important}
+#loginView .cinematic-game-logo{width:min(78%,330px)!important;height:auto!important;max-height:185px!important;object-fit:contain!important;border-radius:0!important;mask-image:radial-gradient(ellipse 70% 67% at 50% 50%,black 58%,transparent 100%)!important;filter:drop-shadow(0 3px 11px #000)!important;margin:0 auto -8px!important}
+#loginView .cinematic-guild-name{font-family:Georgia,'Noto Serif KR',serif!important;font-size:clamp(49px,12vw,68px)!important;letter-spacing:2px!important;color:#fff7e9!important;text-shadow:0 2px 2px #390808,0 0 14px #eb2626,0 0 25px #ed3b26!important}
+#loginView .cinematic-guild-sub{font-size:15px!important;color:#ffe0b3!important;text-shadow:0 2px 8px #000!important}
+#loginView .login-panel{border:1px solid #d9a164!important;border-radius:25px!important;background:linear-gradient(150deg,rgba(19,14,20,.95),rgba(8,9,15,.96) 60%,rgba(19,10,14,.96))!important;box-shadow:0 0 0 1px #6c2c2a,0 0 30px #eb462933,0 18px 45px #000b!important;backdrop-filter:blur(10px)!important}
+#loginView .login-panel-top{color:#dcb77e!important}
+#loginView .login-primary{background:linear-gradient(180deg,#fc3437,#bd0817 70%,#87060d)!important;border:1px solid #ffd28d!important;box-shadow:inset 0 2px 0 #ffaaa066,0 0 16px #ed242b80,0 4px 0 #58060b!important}
+#loginView .login-secondary{background:#18151be8!important;border:1px solid #8b6763!important;color:#d1c8cb!important}
+#loginView .login-security{background:#0c0b10d9!important;border:1px solid #8a624b99!important;color:#e6c9a3!important}
+@media(max-width:480px){#loginView.lux-login{padding:15px 14px 28px!important;background-position:center top!important;background-size:100% 100%!important}#loginView .cinematic-game-logo{width:min(80%,300px)!important;max-height:165px!important}#loginView .login-panel{padding:22px 17px!important}}
+</style>
 </head><body><div class="wrap">
-<section id="loginView" class="lux-login">
-  <div class="login-ambient login-ambient-one"></div><div class="login-ambient login-ambient-two"></div>
-  <div class="login-content">
-    <div class="cinematic-brand">
-      <img class="cinematic-game-logo" src="./bulsa-knights-logo.png" alt="SEVEN KNIGHTS Re:BIRTH">
-      <div class="cinematic-guild-name">불사</div>
-      <div class="cinematic-guild-sub">✦ 불사 길드 전용 공략실 ✦</div>
-    </div>
-    <div class="login-panel">
-      <div class="login-panel-top"><span class="login-panel-line"></span><span>MEMBERS ONLY</span><span class="login-panel-line"></span></div>
-      <h2>길드원 전용 입장</h2><p class="login-desc">가입한 닉네임과 비밀번호를 입력하세요.</p>
-      <label for="loginEmail" class="login-field-label">NICKNAME</label>
-      <div class="login-input-wrap"><span class="login-field-icon" aria-hidden="true">♙</span><input id="loginEmail" placeholder="길드 닉네임" autocomplete="username" autocapitalize="off"></div>
-      <label for="loginPass" class="login-field-label">PASSWORD</label>
-      <div class="login-input-wrap"><span class="login-field-icon" aria-hidden="true">◇</span><input id="loginPass" type="password" placeholder="비밀번호" autocomplete="current-password"><button type="button" class="login-eye" onclick="toggleLoginPassword()" aria-label="비밀번호 표시 전환">보기</button></div>
-      <button class="btn login-primary" onclick="login()"><span>입장하기</span><span aria-hidden="true">↗</span></button>
-      <button class="btn secondary login-secondary" onclick="showRegister()">처음 오셨나요? <strong>가입 신청</strong></button>
-      <div id="loginMsg" class="small login-error" role="status"></div>
-    </div>
-    <div class="login-security">♢ &nbsp; 비밀번호는 이 화면이나 소스코드에 저장되지 않습니다.</div>
-    <div class="login-bottom">BULSA &nbsp;·&nbsp; STRATEGY ARCHIVE <span>EST. 2026</span></div>
+<section id="loginView" class="poster-login">
+ <div class="poster-inner">
+  <div class="poster-form">
+   <h2>길드원 전용 입장</h2>
+   <p>가입한 닉네임과 비밀번호를 입력하세요.</p>
+   <label class="poster-input"><span>♟</span><input id="loginEmail" placeholder="닉네임" autocomplete="username" autocapitalize="off"></label>
+   <label class="poster-input"><span>♙</span><input id="loginPass" type="password" placeholder="비밀번호" autocomplete="current-password"><button type="button" class="poster-eye login-eye" onclick="toggleLoginPassword()" aria-label="비밀번호 보기">보기</button></label>
+   <button class="poster-submit" onclick="login()">입장하기 ❯</button>
+   <button class="poster-register" onclick="showRegister()">♙ 처음 오셨나요? <strong>가입 신청 ❯</strong></button>
+   <div class="poster-security">🔒 비밀번호는 이 화면이나 소스코드에 저장되지 않습니다.</div>
+   <div id="loginMsg" role="status" class="poster-error"></div>
   </div>
+ </div>
 </section>
 <section id="appView" class="hidden"><div id="who" style="display:none"></div><div class="topbar bulsa-header">
   <div class="logo-block">
