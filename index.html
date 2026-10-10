@@ -331,6 +331,11 @@ body{background:#080a0e;color:#f7f8fb;line-height:1.52}
 @keyframes bulsa-shimmer{to{background-position-x:-230%}}
 @media(prefers-reduced-motion:reduce){.tab,.tab::after,.deck-card,.post,.card,#postList,.bulsa-guide-reveal,.bulsa-skeleton-card{animation:none!important;transition:none!important}}
 
+.author-filter{margin:5px 0 14px;padding:10px 11px;border:1px solid #36424e;border-radius:12px;background:#111820}
+.author-filter-heading{font-size:12px;font-weight:800;color:#c8d1dc;margin-bottom:8px}
+.author-filter-chips{display:flex;flex-wrap:wrap;gap:6px}
+.author-filter-chip{border:1px solid #414e5b;background:#202a35;color:#cbd4df;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:750;cursor:pointer;min-height:31px}
+.author-filter-chip.selected{background:#b52330;border-color:#ed4654;color:#fff}
 </style>
 </head><body><div class="wrap">
 <section id="loginView"><div class="logo">불사</div><div class="sub">🔥 불사 길드 전용 공략실</div><div class="card hero"><h2>길드원 전용 입장</h2><div class="small">가입한 닉네임과 비밀번호를 입력하세요.</div><input id="loginEmail" placeholder="닉네임"><input id="loginPass" type="password" placeholder="비밀번호"><button class="btn" onclick="login()">입장하기</button><div style="height:8px"></div><button class="btn secondary" onclick="showRegister()">처음 오셨나요? 가입 신청</button><div id="loginMsg" class="small" style="margin-top:10px;color:#ff8f80"></div></div><div class="notice">🔒 비밀번호는 이 화면이나 소스코드에 저장되지 않습니다.</div></section>
@@ -372,7 +377,7 @@ async function loadPosts(){if($('postList'))$('postList').innerHTML='<div class=
  const guideId=new URLSearchParams(location.search).get('guide');
  if(guideId){const target=posts.find(p=>String(p.id)===guideId);if(target){category=target.category||target.cat||'길드전';const k=deckGroupKey(target.title);expandedGuideGroups.add(k);}}
  renderPosts()}
-function setCategory(c,el){selectedCharacters.clear();category=c;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderPosts()}
+function setCategory(c,el){selectedCharacters.clear();selectedAuthor="";category=c;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderPosts()}
 function normalizeGuideTitle(title){
  return String(title||'')
    .toLocaleLowerCase('ko-KR')
@@ -382,6 +387,8 @@ function normalizeGuideTitle(title){
 const categoryDescriptionsDefault='승인된 길드원은 누구나 공략을 작성할 수 있습니다.';
 let categoryDescriptions={};
 const selectedCharacters=new Set();
+let selectedAuthor="";
+function selectGuideAuthor(name){selectedAuthor=(selectedAuthor===name?"":name);renderPosts();}
 let characterFilterExpanded=false;
 const CHARACTER_FILTER_PREVIEW=10;
 function toggleCharacterFilter(){characterFilterExpanded=!characterFilterExpanded;renderPosts();}
@@ -548,22 +555,26 @@ function renderPosts(){
  const terms=q.split(/\s+/).map(normalizeGuideTitle).filter(Boolean);
  const categoryPosts=posts.filter(p=>category==='전체'||(p.category||p.cat)===category);
  const guildWarMode=category==='길드전';
+ const allAuthors=[...new Set(categoryPosts.map(p=>String(p.author_nickname||"알 수 없음").trim()))].sort((a,b)=>a.localeCompare(b,"ko"));
+ if(selectedAuthor&&!allAuthors.includes(selectedAuthor))selectedAuthor="";
  const allCharacters=guildWarMode?[...new Map(categoryPosts.flatMap(p=>deckTokens(p.title)).map(x=>[x.toLocaleLowerCase('ko-KR'),x])).values()].sort((a,b)=>a.localeCompare(b,'ko')):[];
  // Drop selections no longer present in this category.
  for(const name of selectedCharacters){if(!allCharacters.some(x=>x.toLocaleLowerCase('ko-KR')===name.toLocaleLowerCase('ko-KR')))selectedCharacters.delete(name);}
  const a=categoryPosts.filter(p=>{
    const tokens=deckTokens(p.title).map(x=>x.toLocaleLowerCase('ko-KR'));
-   return (!guildWarMode||[...selectedCharacters].every(x=>tokens.includes(x.toLocaleLowerCase('ko-KR')))) && (!terms.length||terms.every(term=>normalizeGuideTitle(searchableDeckTitle(p.title)).includes(term)));
+   return (!selectedAuthor||String(p.author_nickname||"알 수 없음").trim()===selectedAuthor) && (!guildWarMode||[...selectedCharacters].every(x=>tokens.includes(x.toLocaleLowerCase('ko-KR')))) && (!terms.length||terms.every(term=>normalizeGuideTitle(searchableDeckTitle(p.title)).includes(term)));
  });
  $('welcome').textContent=category==='전체'?'불사 공략실':category+' 공략';
  const previewCharacters=allCharacters.filter(n=>selectedCharacters.has(n)).concat(allCharacters.filter(n=>!selectedCharacters.has(n))).slice(0,CHARACTER_FILTER_PREVIEW);
  const visibleCharacters=characterFilterExpanded?allCharacters:previewCharacters;
  const hiddenCount=allCharacters.length-visibleCharacters.length;
  const chips=guildWarMode?`<div class="character-filter"><div class="filter-heading">🔎 캐릭터별 공략 찾기</div><div class="filter-hint">여러 명을 선택하면 모두 포함된 덱만 나옵니다. · 제목에서 자동 생성</div><div class="filter-chips"><button class="filter-chip ${selectedCharacters.size===0?'selected':''}" onclick="clearCharacters()">전체</button>${visibleCharacters.map(n=>`<button class="filter-chip ${selectedCharacters.has(n)?'selected':''}" onclick='toggleCharacter(${JSON.stringify(n)})'>${esc(n)}</button>`).join('')}</div>${allCharacters.length>CHARACTER_FILTER_PREVIEW?`<button type="button" class="character-more-btn" onclick="toggleCharacterFilter()" aria-expanded="${characterFilterExpanded}" aria-label="캐릭터 필터 ${characterFilterExpanded?'접기':'펼치기'}">${characterFilterExpanded?'▲ 접기':`＋ ${hiddenCount}명 더보기 ▼`}</button>`:''}</div>`:'';
- if(!a.length){$('postList').innerHTML=chips+`<div class="card"><div class="small">${q||selectedCharacters.size?'조건에 맞는 공략이 없습니다.':'등록된 공략이 없습니다.'}</div></div>`;return;}
+ const authorChips=`<div class="author-filter"><div class="author-filter-heading">✍️ 작성자 선택 <span style="font-size:10px;color:#93a1b2;font-weight:500">· 버튼을 누르면 해당 작성자 공략만 표시</span></div><div class="author-filter-chips"><button type="button" class="author-filter-chip ${!selectedAuthor?'selected':''}" onclick='selectGuideAuthor("")'>전체</button>${allAuthors.map(n=>`<button type="button" class="author-filter-chip ${selectedAuthor===n?'selected':''}" onclick='selectGuideAuthor(${JSON.stringify(n)})'>${esc(n)}</button>`).join('')}</div></div>`;
+ const filters=chips+authorChips;
+ if(!a.length){$('postList').innerHTML=filters+`<div class="card"><div class="small">${q||selectedCharacters.size||selectedAuthor?'조건에 맞는 공략이 없습니다.':'등록된 공략이 없습니다.'}</div></div>`;return;}
  const groups=new Map();
  a.forEach(p=>{const key=deckGroupKey(p.title);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p)});
- $('postList').innerHTML=chips+`<div class="small" style="margin:0 0 10px">📚 ${groups.size}개 덱 · 공략 ${a.length}개</div>`+[...groups.entries()].map(([key,group],deckIndex)=>{
+ $('postList').innerHTML=filters+`<div class="small" style="margin:0 0 10px">📚 ${groups.size}개 덱 · 공략 ${a.length}개</div>`+[...groups.entries()].map(([key,group],deckIndex)=>{
    const first=group[0],open=expandedGuideGroups.has(key),authors=[...new Set(group.map(p=>p.author_nickname||'알 수 없음'))];
    const tokens=deckTokens(first.title);
    return guildWarMode?`<div class="deck-card" onclick='toggleGuideGroup(${JSON.stringify(key)})'><div class="deck-head"><span class="deck-number">${deckIndex+1}</span><div class="deck-title-wrap"><div class="deck-name">${esc(first.title)}</div></div><span class="deck-count">공략 ${group.length}개</span></div><div class="deck-tags" style="margin-top:9px">${tokens.map(n=>`<span class="deck-chip ${selectedCharacters.has(n)?'selected':''}">${esc(n)}</span>`).join('')}</div><div class="deck-meta">✍️ ${esc(authors.join(' · '))}</div><div class="deck-expand">${open?'▲ 공략 접기':'▼ 공략 펼쳐보기'}</div></div>${open?`<div class="bulsa-guide-reveal" style="padding-left:9px;border-left:2px solid #76200f">${group.map(renderPostCard).join('')}</div>`:''}`:`<div class="card" style="cursor:pointer" onclick='toggleGuideGroup(${JSON.stringify(key)})'><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><strong>${esc(first.title)}</strong><span class="small">공략 ${group.length}개</span></div><div class="small" style="margin-top:6px">✍️ ${esc(authors.join(' · '))} · ${open?'▲ 접기':'▼ 펼치기'}</div></div>${open?`<div class="bulsa-guide-reveal" style="padding-left:9px;border-left:2px solid #76200f">${group.map(renderPostCard).join('')}</div>`:''}`;
