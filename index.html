@@ -727,6 +727,7 @@ function renderDesktopSidebar(){
 }
 
 function renderPosts(){
+ document.querySelector('#appView .card.hero')?.classList.toggle('hidden',category==='홈');
  renderDesktopSidebar();
  updateCategoryDescription();
  if(category==='홈'){$('welcome').textContent='불사 길드';renderHome();return;}
