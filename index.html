@@ -99,6 +99,28 @@
 /* 길드전 캐릭터 필터 접기/펼치기 */
 .character-more-btn{display:block;width:100%;margin-top:10px;padding:11px 12px;border:1px solid #45505c;border-radius:10px;background:#202831;color:#f2f4f7;font-weight:800;font-size:13px;cursor:pointer;min-height:42px}
 .character-more-btn:active{background:#303944}
+
+/* Cinematic battlefield redesign - login only */
+#loginView.lux-login{min-height:100svh;margin:-10px -12px -34px;padding:24px 15px 36px;background:#120509 url('./bulsa-battle-scene.webp') center top/cover no-repeat!important}
+#loginView.lux-login::before{inset:0;background:linear-gradient(90deg,rgba(9,2,6,.13),rgba(8,2,6,.42) 32%,rgba(8,2,6,.42) 68%,rgba(9,2,6,.13)),linear-gradient(180deg,transparent 0%,rgba(9,2,7,.35) 36%,rgba(9,2,7,.1) 80%)!important;opacity:1!important;mask-image:none!important;z-index:-1}
+#loginView.lux-login::after{display:none!important}
+#loginView .login-ambient{display:none}
+#loginView .login-content{max-width:510px}
+#loginView .cinematic-brand{padding:4px 0 15px}
+#loginView .cinematic-game-logo{width:min(78%,330px);height:auto;max-height:190px;object-fit:contain;object-position:center;border-radius:0;mask-image:none;filter:drop-shadow(0 4px 12px #050003) drop-shadow(0 0 14px #fa442d);margin:0 auto -7px}
+#loginView .cinematic-guild-name{font-family:Georgia,'Noto Serif KR',serif;font-size:clamp(42px,10vw,66px);color:#fff4df;text-shadow:0 3px 0 #8b1715,0 0 12px #fb4c39,0 0 28px #fb3a27}
+#loginView .cinematic-guild-sub{font-size:15px;color:#ffe2ad;text-shadow:0 2px 8px #000,0 0 12px #7d180e}
+#loginView .login-panel{padding:24px 22px 22px;border:2px solid #d9a253;border-radius:14px;background:linear-gradient(135deg,rgba(24,9,13,.97),rgba(6,6,11,.96) 48%,rgba(22,7,12,.97));box-shadow:0 0 0 2px #2e0808,0 0 0 4px #ae5c3c7a,0 0 32px #ff45174d,0 18px 45px #000b,inset 0 0 34px #4a131226}
+#loginView .login-panel::before{left:9%;right:9%;height:3px;background:linear-gradient(90deg,transparent,#ff8a38,#ffe2a3,#ff5836,transparent);box-shadow:0 0 16px #f64e2e}
+#loginView .login-panel-top{color:#d7a76d;font-size:10px}
+#loginView .login-panel h2{font-size:clamp(23px,6vw,30px);color:#fff3e5;text-shadow:0 0 15px #f5393480}
+#loginView .login-desc{color:#ddd0c7}
+#loginView .login-input-wrap{border-radius:8px!important;background:linear-gradient(180deg,#101015,#17151a)!important;border:1px solid #9a6d5b!important;box-shadow:inset 0 2px 9px #0009}
+#loginView .login-primary{border:1px solid #ffc06a!important;border-radius:9px!important;background:linear-gradient(180deg,#ff3d34,#b6000d 56%,#73030b)!important;box-shadow:inset 0 2px 0 #ffaaa060,0 0 17px #f33024a8,0 5px 0 #4e070a!important;font-weight:950}
+#loginView .login-secondary{border:1px solid #8d6d61!important;border-radius:8px!important;background:linear-gradient(180deg,#231b20,#100f15)!important}
+#loginView .login-security{background:#10090ad9;border-color:#94603f;color:#ebc99d}
+#loginView .login-bottom{color:#d2b29e;text-shadow:0 1px 3px #000}
+@media(max-width:600px){#loginView.lux-login{padding:13px 16px 30px;background-position:center top;background-size:100% 100%!important}#loginView .cinematic-game-logo{width:min(78%,295px)}#loginView .cinematic-brand{padding-bottom:14px}#loginView .login-panel{padding:22px 17px 20px}#loginView .login-security{margin-top:22px}}
 </style>
 <link rel="icon" type="image/png" sizes="512x512" href="./icon.png?v=2">
 <link rel="apple-touch-icon" sizes="512x512" href="./icon.png?v=2">
@@ -378,7 +400,7 @@ body{background:#080a0e;color:#f7f8fb;line-height:1.52}
   <div class="login-ambient login-ambient-one"></div><div class="login-ambient login-ambient-two"></div>
   <div class="login-content">
     <div class="cinematic-brand">
-      <img class="cinematic-game-logo" src="./bulsa-seven-knights-logo.webp" alt="SEVEN KNIGHTS Re:BIRTH">
+      <img class="cinematic-game-logo" src="./bulsa-knights-logo.png" alt="SEVEN KNIGHTS Re:BIRTH">
       <div class="cinematic-guild-name">불사</div>
       <div class="cinematic-guild-sub">✦ 불사 길드 전용 공략실 ✦</div>
     </div>
